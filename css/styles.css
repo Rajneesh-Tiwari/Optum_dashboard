@@ -326,7 +326,20 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Responsive - Laptop screens (1024px - 1400px) */
 @media (max-width: 1400px) {
+    html, body {
+        overflow: auto !important;
+        height: auto !important;
+    }
+
+    #sections-container {
+        height: auto !important;
+        overflow: visible !important;
+    }
+
     .section {
+        height: auto !important;
+        min-height: 100vh;
+        overflow: visible !important;
         padding-left: 1.5rem !important;
         padding-right: 1.5rem !important;
         padding-top: 1rem !important;
@@ -387,8 +400,15 @@ h1, h2, h3, h4, h5, h6 {
 /* Responsive - Small laptops (768px - 1024px) */
 @media (max-width: 1024px) {
     .section {
+        height: auto !important;
+        min-height: auto !important;
         padding-top: 0.5rem !important;
         padding-bottom: 80px !important;
+    }
+
+    #global-nav {
+        position: fixed;
+        bottom: 10px;
     }
 
     .grid-cols-2,
