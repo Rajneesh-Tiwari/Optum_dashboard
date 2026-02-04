@@ -324,10 +324,10 @@ h1, h2, h3, h4, h5, h6 {
     font-size: 14px !important;
 }
 
-/* Responsive - Desktop Only Message */
-@media (max-width: 1279px) {
+/* Responsive - Mobile Only Message (tablets and phones) */
+@media (max-width: 767px) {
     body::before {
-        content: 'This demo is optimized for desktop screens (1280px+). Please view on a larger display.';
+        content: 'This demo is optimized for larger screens. Please view on a tablet or desktop.';
         position: fixed;
         inset: 0;
         display: flex;
