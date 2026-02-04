@@ -1,0 +1,1313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1280">
+    <title>Optum Cardio-Metabolic Population Health Demo</title>
+
+    <!-- Libraries -->
+    <script src="lib/tailwind.js"></script>
+    <script src="lib/plotly-2.27.0.min.js"></script>
+    <script src="lib/gsap.min.js"></script>
+    <script src="lib/ScrollTrigger.min.js"></script>
+
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="css/styles.css">
+
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        optum: {
+                            orange: '#FF612B',
+                            blue: '#002677',
+                            navy: '#001F5C',
+                            gray: '#5A5A5A',
+                            light: '#F7F7F7'
+                        },
+                        cluster: {
+                            1: '#EF4444',
+                            2: '#F97316',
+                            3: '#EAB308',
+                            4: '#22C55E',
+                            5: '#3B82F6'
+                        },
+                        risk: {
+                            high: '#EF4444',
+                            medium: '#F97316',
+                            low: '#22C55E'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-optum-light text-optum-gray antialiased">
+    <!-- Progress Bar -->
+    <div class="progress-container">
+        <div class="progress-fill" id="progress-fill"></div>
+    </div>
+
+    <!-- Section Indicator -->
+    <div class="section-indicator" id="section-indicator">Section 1 of 10</div>
+
+    <!-- Fixed Navigation -->
+    <nav id="nav-dots" class="fixed right-6 top-1/2 -translate-y-1/2 z-50 flex flex-col gap-3">
+        <a href="#welcome" class="nav-dot active" data-section="0" title="Welcome"></a>
+        <a href="#population" class="nav-dot" data-section="1" title="Population Overview"></a>
+        <a href="#geographic" class="nav-dot" data-section="2" title="Geographic View"></a>
+        <a href="#segmentation" class="nav-dot" data-section="3" title="Segmentation"></a>
+        <a href="#cluster-detail" class="nav-dot" data-section="4" title="Cluster Detail"></a>
+        <a href="#davita-insight" class="nav-dot" data-section="5" title="DaVita Insight"></a>
+        <a href="#scenario" class="nav-dot" data-section="6" title="Scenario Simulator"></a>
+        <a href="#timeline" class="nav-dot" data-section="7" title="Timeline"></a>
+        <a href="#persona" class="nav-dot" data-section="8" title="Member Personas"></a>
+        <a href="#cta" class="nav-dot" data-section="9" title="Next Steps"></a>
+    </nav>
+
+    <!-- Detail Panel (slide-in) -->
+    <aside id="detail-panel" class="fixed right-0 top-0 h-full w-[400px] bg-white shadow-2xl z-40 transform translate-x-full transition-transform duration-300">
+        <button id="panel-close" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        </button>
+        <div id="panel-content" class="p-6 pt-16 h-full overflow-y-auto"></div>
+    </aside>
+
+    <!-- Sections Container -->
+    <main id="sections-container">
+    <!-- Section 1: Welcome -->
+    <section id="welcome" class="section min-h-screen flex flex-col items-center justify-center relative section-gradient-1" data-section-index="0">
+        <div class="text-center">
+            <div class="mb-8 float-animation">
+                <svg class="inline-block h-12" viewBox="0 0 200 50">
+                    <text x="0" y="35" fill="#FF612B" font-size="32" font-weight="700">Optum</text>
+                </svg>
+            </div>
+            <h1 class="text-5xl font-bold text-optum-navy mb-6 fade-up">Cardio-Metabolic<br>Population Health</h1>
+            <p class="text-xl text-optum-gray max-w-2xl mx-auto mb-12 fade-up delay-1">
+                Arkansas DSNP/Medicare Population Segmentation & Intervention Planning
+            </p>
+            <div class="grid grid-cols-4 gap-8 max-w-3xl mx-auto mb-16 fade-up delay-2">
+                <div class="glass-card rounded-xl p-4 text-center">
+                    <div class="stat-number text-4xl font-bold text-optum-orange" data-target="4000">0</div>
+                    <div class="text-sm text-optum-gray mt-1">Members</div>
+                </div>
+                <div class="glass-card rounded-xl p-4 text-center">
+                    <div class="stat-number text-4xl font-bold text-optum-orange" data-target="5">0</div>
+                    <div class="text-sm text-optum-gray mt-1">Risk Clusters</div>
+                </div>
+                <div class="glass-card rounded-xl p-4 text-center">
+                    <div class="stat-number text-4xl font-bold text-optum-orange" data-target="75">0</div>
+                    <div class="text-sm text-optum-gray mt-1">Counties</div>
+                </div>
+                <div class="glass-card rounded-xl p-4 text-center">
+                    <div class="stat-number text-4xl font-bold text-optum-orange" data-target="142">0</div>
+                    <div class="text-sm text-optum-gray mt-1">$M Annual Spend</div>
+                </div>
+            </div>
+        </div>
+        <!-- Section Navigation -->
+        <div class="section-nav">
+            <button class="nav-btn nav-btn-next" onclick="Navigation.next()">
+                Begin Presentation
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                </svg>
+            </button>
+        </div>
+    </section>
+
+    <!-- Section 2: Population Overview -->
+    <section id="population" class="section min-h-screen py-20 px-12 section-gradient-2" data-section-index="1">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="text-3xl font-bold text-optum-navy mb-2 fade-up">Population Overview</h2>
+            <p class="text-optum-gray mb-8 fade-up">4,000 cardio-metabolic members across Arkansas</p>
+
+            <div class="grid grid-cols-2 gap-8">
+                <!-- Left: Stats Cards -->
+                <div class="space-y-4 fade-up delay-1">
+                    <div class="glass-card rounded-xl p-6">
+                        <h3 class="text-lg font-semibold text-optum-navy mb-4">Line of Business Distribution</h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center">
+                                <span>DSNP</span>
+                                <span class="font-semibold">1,000</span>
+                            </div>
+                            <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+                                <div class="h-full bg-optum-orange rounded-full" style="width: 25%"></div>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span>Medicare</span>
+                                <span class="font-semibold">1,200</span>
+                            </div>
+                            <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+                                <div class="h-full bg-optum-blue rounded-full" style="width: 30%"></div>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span>Medicaid</span>
+                                <span class="font-semibold">1,000</span>
+                            </div>
+                            <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+                                <div class="h-full bg-cluster-4 rounded-full" style="width: 25%"></div>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span>Commercial</span>
+                                <span class="font-semibold">800</span>
+                            </div>
+                            <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+                                <div class="h-full bg-cluster-5 rounded-full" style="width: 20%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass-card rounded-xl p-6">
+                        <h3 class="text-lg font-semibold text-optum-navy mb-4">Key Metrics</h3>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <div class="text-2xl font-bold text-optum-orange">$35,478</div>
+                                <div class="text-sm text-optum-gray">Avg PMPY</div>
+                            </div>
+                            <div>
+                                <div class="text-2xl font-bold text-optum-orange">1.62</div>
+                                <div class="text-sm text-optum-gray">Avg HCC Score</div>
+                            </div>
+                            <div>
+                                <div class="text-2xl font-bold text-optum-orange">7.8%</div>
+                                <div class="text-sm text-optum-gray">Avg A1C</div>
+                            </div>
+                            <div>
+                                <div class="text-2xl font-bold text-optum-orange">58</div>
+                                <div class="text-sm text-optum-gray">Avg Age</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- LLM Insight Box -->
+                    <div class="llm-insight-box glass glass-card-dark rounded-xl p-6 text-white">
+                        <div class="flex items-center gap-2 mb-3">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1z"/>
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm0-2a6 6 0 100-12 6 6 0 000 12z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="font-semibold">AI Insight</span>
+                        </div>
+                        <p class="llm-text text-sm leading-relaxed" data-insight="population_overview"></p>
+                    </div>
+                </div>
+
+                <!-- Right: PMPY Chart -->
+                <div class="fade-up delay-2">
+                    <div class="glass-card rounded-xl p-6 h-full">
+                        <h3 class="text-lg font-semibold text-optum-navy mb-4">Cost Distribution by Risk Cluster</h3>
+                        <div id="population-chart" class="h-[400px]"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Section Navigation -->
+        <div class="section-nav">
+            <button class="nav-btn nav-btn-prev" onclick="Navigation.prev()">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"/>
+                </svg>
+                Previous
+            </button>
+            <button class="nav-btn nav-btn-next" onclick="Navigation.next()">
+                Next
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                </svg>
+            </button>
+        </div>
+    </section>
+
+    <!-- Section 3: Geographic View -->
+    <section id="geographic" class="section min-h-screen py-20 px-12 section-gradient-3" data-section-index="2">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="text-3xl font-bold text-optum-navy mb-2 fade-up">Geographic Distribution</h2>
+            <p class="text-optum-gray mb-8 fade-up">Risk and cost patterns across Arkansas counties</p>
+
+            <div class="grid grid-cols-3 gap-8">
+                <!-- Map -->
+                <div class="col-span-2 fade-up delay-1">
+                    <div class="glass-card rounded-xl p-6">
+                        <div class="flex gap-2 mb-4">
+                            <button class="map-layer-btn active px-4 py-2 rounded-lg text-sm font-medium" data-layer="risk">Risk Score</button>
+                            <button class="map-layer-btn px-4 py-2 rounded-lg text-sm font-medium" data-layer="cost">Avg Cost</button>
+                            <button class="map-layer-btn px-4 py-2 rounded-lg text-sm font-medium" data-layer="esrd">ESRD Rate</button>
+                            <button class="map-layer-btn px-4 py-2 rounded-lg text-sm font-medium" data-layer="access">Access Score</button>
+                            <button class="map-layer-btn px-4 py-2 rounded-lg text-sm font-medium" data-layer="sdoh">SDOH Index</button>
+                        </div>
+                        <div id="map-chart" class="h-[500px]"></div>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="space-y-4 fade-up delay-2">
+                    <div class="glass-card rounded-xl p-6">
+                        <h3 class="text-lg font-semibold text-optum-navy mb-4">Regional Summary</h3>
+                        <div class="space-y-3" id="regional-stats">
+                            <div class="region-stat cursor-pointer hover:bg-gray-50 p-2 rounded" data-region="Delta">
+                                <div class="flex justify-between">
+                                    <span class="font-medium">Delta Region</span>
+                                    <span class="text-risk-high font-semibold">High Risk</span>
+                                </div>
+                                <div class="text-sm text-optum-gray">2.3x ESRD rate, 40% higher costs</div>
+                            </div>
+                            <div class="region-stat cursor-pointer hover:bg-gray-50 p-2 rounded" data-region="Northwest">
+                                <div class="flex justify-between">
+                                    <span class="font-medium">Northwest</span>
+                                    <span class="text-risk-low font-semibold">Low Risk</span>
+                                </div>
+                                <div class="text-sm text-optum-gray">Best access, lowest costs</div>
+                            </div>
+                            <div class="region-stat cursor-pointer hover:bg-gray-50 p-2 rounded" data-region="Little Rock">
+                                <div class="flex justify-between">
+                                    <span class="font-medium">Little Rock Metro</span>
+                                    <span class="text-risk-medium font-semibold">Moderate</span>
+                                </div>
+                                <div class="text-sm text-optum-gray">Good access, average costs</div>
+                            </div>
+                            <div class="region-stat cursor-pointer hover:bg-gray-50 p-2 rounded" data-region="Southwest">
+                                <div class="flex justify-between">
+                                    <span class="font-medium">Southwest</span>
+                                    <span class="text-risk-medium font-semibold">Elevated</span>
+                                </div>
+                                <div class="text-sm text-optum-gray">SDOH challenges</div>
+                            </div>
+                            <div class="region-stat cursor-pointer hover:bg-gray-50 p-2 rounded" data-region="River Valley">
+                                <div class="flex justify-between">
+                                    <span class="font-medium">River Valley</span>
+                                    <span class="text-risk-medium font-semibold">Mixed</span>
+                                </div>
+                                <div class="text-sm text-optum-gray">Variable by county</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- LLM Insight -->
+                    <div class="llm-insight-box glass glass-card-dark rounded-xl p-6 text-white">
+                        <div class="flex items-center gap-2 mb-3">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1z"/>
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm0-2a6 6 0 100-12 6 6 0 000 12z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="font-semibold">AI Insight</span>
+                        </div>
+                        <p class="llm-text text-sm leading-relaxed" data-insight="geographic_delta"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Section Navigation -->
+        <div class="section-nav">
+            <button class="nav-btn nav-btn-prev" onclick="Navigation.prev()">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"/>
+                </svg>
+                Previous
+            </button>
+            <button class="nav-btn nav-btn-next" onclick="Navigation.next()">
+                Next
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                </svg>
+            </button>
+        </div>
+    </section>
+
+    <!-- Section 4: Segmentation Overview -->
+    <section id="segmentation" class="section min-h-screen py-20 px-12 section-gradient-4" data-section-index="3">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="text-3xl font-bold text-optum-navy mb-2 fade-up">Risk Segmentation</h2>
+            <p class="text-optum-gray mb-8 fade-up">Five distinct cardio-metabolic risk clusters</p>
+
+            <div class="grid grid-cols-5 gap-4 mb-8 fade-up delay-1">
+                <div class="cluster-card glass glass-card rounded-xl p-4 border-t-4 border-cluster-1 cursor-pointer" data-cluster="1">
+                    <div class="text-3xl font-bold text-cluster-1 mb-1">391</div>
+                    <div class="text-sm font-semibold mb-2">Critical Renal</div>
+                    <div class="text-xs text-optum-gray">$135,749 avg PMPY</div>
+                </div>
+                <div class="cluster-card glass glass-card rounded-xl p-4 border-t-4 border-cluster-2 cursor-pointer" data-cluster="2">
+                    <div class="text-3xl font-bold text-cluster-2 mb-1">855</div>
+                    <div class="text-sm font-semibold mb-2">Cardiac-DM Surge</div>
+                    <div class="text-xs text-optum-gray">$51,826 avg PMPY</div>
+                </div>
+                <div class="cluster-card glass glass-card rounded-xl p-4 border-t-4 border-cluster-3 cursor-pointer" data-cluster="3">
+                    <div class="text-3xl font-bold text-cluster-3 mb-1">1,070</div>
+                    <div class="text-sm font-semibold mb-2">Metabolic Emerging</div>
+                    <div class="text-xs text-optum-gray">$25,733 avg PMPY</div>
+                </div>
+                <div class="cluster-card glass glass-card rounded-xl p-4 border-t-4 border-cluster-4 cursor-pointer" data-cluster="4">
+                    <div class="text-3xl font-bold text-cluster-4 mb-1">922</div>
+                    <div class="text-sm font-semibold mb-2">Controlled Stable</div>
+                    <div class="text-xs text-optum-gray">$13,230 avg PMPY</div>
+                </div>
+                <div class="cluster-card glass glass-card rounded-xl p-4 border-t-4 border-cluster-5 cursor-pointer" data-cluster="5">
+                    <div class="text-3xl font-bold text-cluster-5 mb-1">762</div>
+                    <div class="text-sm font-semibold mb-2">Prevention Window</div>
+                    <div class="text-xs text-optum-gray">$6,576 avg PMPY</div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-8">
+                <!-- Bubble/Treemap Chart -->
+                <div class="fade-up delay-2">
+                    <div class="glass-card rounded-xl p-6">
+                        <h3 class="text-lg font-semibold text-optum-navy mb-4">Cost vs Population by Cluster</h3>
+                        <div id="segmentation-chart" class="h-[400px]"></div>
+                    </div>
+                </div>
+
+                <!-- Radar + Insight -->
+                <div class="space-y-4 fade-up delay-3">
+                    <div class="glass-card rounded-xl p-6">
+                        <h3 class="text-lg font-semibold text-optum-navy mb-4">Cluster Feature Profile</h3>
+                        <div id="radar-chart" class="h-[280px]"></div>
+                    </div>
+
+                    <div class="llm-insight-box glass glass-card-dark rounded-xl p-6 text-white">
+                        <div class="flex items-center gap-2 mb-3">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3z"/>
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm0-2a6 6 0 100-12 6 6 0 000 12z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="font-semibold">AI Insight</span>
+                        </div>
+                        <p class="llm-text text-sm leading-relaxed" data-insight="segmentation_overview"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Section Navigation -->
+        <div class="section-nav">
+            <button class="nav-btn nav-btn-prev" onclick="Navigation.prev()">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"/>
+                </svg>
+                Previous
+            </button>
+            <button class="nav-btn nav-btn-next" onclick="Navigation.next()">
+                Next
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                </svg>
+            </button>
+        </div>
+    </section>
+
+    <!-- Section 5: Cluster Detail -->
+    <section id="cluster-detail" class="section min-h-screen py-20 px-12 section-gradient-5" data-section-index="4">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="text-3xl font-bold text-optum-navy mb-2 fade-up">Cluster Deep Dive</h2>
+            <p class="text-optum-gray mb-8 fade-up">Detailed analysis of selected risk segment</p>
+
+            <!-- Cluster Tabs -->
+            <div class="flex gap-2 mb-8 fade-up delay-1">
+                <button class="cluster-tab active px-6 py-3 rounded-lg font-medium" data-cluster="1">Critical Renal</button>
+                <button class="cluster-tab px-6 py-3 rounded-lg font-medium" data-cluster="2">Cardiac-DM Surge</button>
+                <button class="cluster-tab px-6 py-3 rounded-lg font-medium" data-cluster="3">Metabolic Emerging</button>
+            </div>
+
+            <!-- Cluster Content -->
+            <div id="cluster-content" class="grid grid-cols-3 gap-8">
+                <!-- Left Column: Metrics -->
+                <div class="space-y-4 fade-up delay-2">
+                    <div class="glass-card rounded-xl p-6">
+                        <h3 class="text-lg font-semibold text-optum-navy mb-4">Clinical Profile</h3>
+                        <div class="space-y-4" id="clinical-metrics">
+                            <div class="flex justify-between">
+                                <span>Avg HCC Score</span>
+                                <span class="font-bold text-cluster-1">3.4</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Avg A1C</span>
+                                <span class="font-bold">9.8%</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Avg eGFR</span>
+                                <span class="font-bold text-risk-high">24 mL/min</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Avg BP</span>
+                                <span class="font-bold">162/98</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass-card rounded-xl p-6">
+                        <h3 class="text-lg font-semibold text-optum-navy mb-4">Utilization (YTD)</h3>
+                        <div class="space-y-4" id="utilization-metrics">
+                            <div class="flex justify-between">
+                                <span>ER Visits</span>
+                                <span class="font-bold">4.2 avg</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Hospitalizations</span>
+                                <span class="font-bold">2.1 avg</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Specialist Visits</span>
+                                <span class="font-bold">12.5 avg</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass-card rounded-xl p-6">
+                        <h3 class="text-lg font-semibold text-optum-navy mb-4">LOB Breakdown</h3>
+                        <div id="cluster-lob-chart" class="h-[150px]"></div>
+                    </div>
+                </div>
+
+                <!-- Center Column: Distribution Charts -->
+                <div class="space-y-4 fade-up delay-3">
+                    <div class="glass-card rounded-xl p-6">
+                        <h3 class="text-lg font-semibold text-optum-navy mb-4">Cost Distribution</h3>
+                        <div id="cluster-cost-dist" class="h-[200px]"></div>
+                    </div>
+
+                    <div class="glass-card rounded-xl p-6">
+                        <h3 class="text-lg font-semibold text-optum-navy mb-4">Geographic Concentration</h3>
+                        <div id="cluster-geo-chart" class="h-[200px]"></div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Sub-clusters & Insight -->
+                <div class="space-y-4 fade-up delay-4">
+                    <div class="glass-card rounded-xl p-6" id="subclusters-card">
+                        <h3 class="text-lg font-semibold text-optum-navy mb-4">Sub-Populations</h3>
+                        <div class="space-y-3" id="subclusters-content">
+                            <div class="p-3 bg-red-50 rounded-lg border border-red-200">
+                                <div class="font-semibold text-risk-high">Complex Frail (85)</div>
+                                <div class="text-sm text-optum-gray">Age 75+, multiple comorbidities, highest cost</div>
+                            </div>
+                            <div class="p-3 bg-orange-50 rounded-lg border border-orange-200">
+                                <div class="font-semibold text-cluster-2">Non-Outreach (30)</div>
+                                <div class="text-sm text-optum-gray">No PCP visit 18+ months, disengaged</div>
+                            </div>
+                            <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                <div class="font-semibold">Standard Risk (276)</div>
+                                <div class="text-sm text-optum-gray">Active engagement, care plan in place</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="llm-insight-box glass glass-card-dark rounded-xl p-6 text-white">
+                        <div class="flex items-center gap-2 mb-3">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3z"/>
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="font-semibold">AI Insight</span>
+                        </div>
+                        <p class="llm-text text-sm leading-relaxed" data-insight="cluster_1_detail"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Section Navigation -->
+        <div class="section-nav">
+            <button class="nav-btn nav-btn-prev" onclick="Navigation.prev()">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"/>
+                </svg>
+                Previous
+            </button>
+            <button class="nav-btn nav-btn-next" onclick="Navigation.next()">
+                Next
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                </svg>
+            </button>
+        </div>
+    </section>
+
+    <!-- Section 6: DaVita Insight -->
+    <section id="davita-insight" class="section min-h-screen py-20 px-12 section-gradient-1" data-section-index="5">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="text-3xl font-bold text-optum-navy mb-2 fade-up">Provider Network Insight</h2>
+            <p class="text-optum-gray mb-8 fade-up">DaVita dialysis cost analysis - DSNP Critical Renal segment</p>
+
+            <div class="grid grid-cols-2 gap-8 mb-8">
+                <!-- Comparison Cards -->
+                <div class="fade-up delay-1">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="glass-card rounded-xl p-6 border-l-4 border-cluster-1">
+                            <div class="text-sm text-optum-gray mb-1">DaVita Members</div>
+                            <div class="text-4xl font-bold text-cluster-1" id="davita-count">8</div>
+                            <div class="text-2xl font-bold text-optum-navy mt-2" id="davita-cost">$223,720</div>
+                            <div class="text-sm text-optum-gray">Avg PMPY</div>
+                        </div>
+                        <div class="glass-card rounded-xl p-6 border-l-4 border-optum-blue">
+                            <div class="text-sm text-optum-gray mb-1">Non-DaVita Members</div>
+                            <div class="text-4xl font-bold text-optum-blue" id="nondavita-count">121</div>
+                            <div class="text-2xl font-bold text-optum-navy mt-2" id="nondavita-cost">$144,765</div>
+                            <div class="text-sm text-optum-gray">Avg PMPY</div>
+                        </div>
+                    </div>
+
+                    <div class="glass-card rounded-xl p-6 mt-4">
+                        <div class="text-center">
+                            <div class="text-sm text-optum-gray mb-1">Cost Gap</div>
+                            <div class="text-5xl font-bold text-cluster-1" id="cost-gap">54.5%</div>
+                            <div class="text-lg text-optum-gray mt-2">$78,955 per member annually</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Waterfall Chart -->
+                <div class="fade-up delay-2">
+                    <div class="glass-card rounded-xl p-6">
+                        <h3 class="text-lg font-semibold text-optum-navy mb-4">Cost Decomposition</h3>
+                        <div id="waterfall-chart" class="h-[300px]"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-8">
+                <div class="col-span-2 fade-up delay-3">
+                    <div class="glass-card rounded-xl p-6">
+                        <h3 class="text-lg font-semibold text-optum-navy mb-4">Key Findings</h3>
+                        <div class="space-y-4">
+                            <div class="flex gap-4">
+                                <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                                    <span class="text-risk-high font-bold">1</span>
+                                </div>
+                                <div>
+                                    <div class="font-semibold">Higher Complication Rates</div>
+                                    <div class="text-sm text-optum-gray">DaVita members show 2.1x higher vascular access complications</div>
+                                </div>
+                            </div>
+                            <div class="flex gap-4">
+                                <div class="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0">
+                                    <span class="text-cluster-2 font-bold">2</span>
+                                </div>
+                                <div>
+                                    <div class="font-semibold">Care Coordination Gaps</div>
+                                    <div class="text-sm text-optum-gray">Limited integration with primary care and specialists</div>
+                                </div>
+                            </div>
+                            <div class="flex gap-4">
+                                <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center flex-shrink-0">
+                                    <span class="text-cluster-3 font-bold">3</span>
+                                </div>
+                                <div>
+                                    <div class="font-semibold">Transportation Barriers</div>
+                                    <div class="text-sm text-optum-gray">62% report transportation challenges to dialysis sessions</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="fade-up delay-4">
+                    <div class="llm-insight-box glass glass-card-dark rounded-xl p-6 text-white h-full">
+                        <div class="flex items-center gap-2 mb-3">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3z"/>
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="font-semibold">AI Insight</span>
+                        </div>
+                        <p class="llm-text text-sm leading-relaxed" data-insight="davita_analysis"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Section Navigation -->
+        <div class="section-nav">
+            <button class="nav-btn nav-btn-prev" onclick="Navigation.prev()">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"/>
+                </svg>
+                Previous
+            </button>
+            <button class="nav-btn nav-btn-next" onclick="Navigation.next()">
+                Next
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                </svg>
+            </button>
+        </div>
+    </section>
+
+    <!-- Section 7: Scenario Simulator -->
+    <section id="scenario" class="section min-h-screen py-20 px-12 section-gradient-2" data-section-index="6">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="text-3xl font-bold text-optum-navy mb-2 fade-up">Intervention Scenario Simulator</h2>
+            <p class="text-optum-gray mb-8 fade-up">Model outcomes for different intervention strategies</p>
+
+            <div class="grid grid-cols-3 gap-8">
+                <!-- Controls -->
+                <div class="space-y-4 fade-up delay-1">
+                    <div class="glass-card rounded-xl p-6">
+                        <h3 class="text-lg font-semibold text-optum-navy mb-4">Target Population</h3>
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="radio" name="scenario-cluster" value="1" class="w-4 h-4 text-optum-orange" checked>
+                                <span>Critical Renal (391 members)</span>
+                            </label>
+                            <label class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="radio" name="scenario-cluster" value="2" class="w-4 h-4 text-optum-orange">
+                                <span>Cardiac-DM Surge (855 members)</span>
+                            </label>
+                            <label class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input type="radio" name="scenario-cluster" value="3" class="w-4 h-4 text-optum-orange">
+                                <span>Metabolic Emerging (1,070 members)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="glass-card rounded-xl p-6">
+                        <h3 class="text-lg font-semibold text-optum-navy mb-4">Intervention</h3>
+                        <select id="intervention-select" class="w-full p-3 border rounded-lg bg-white/70">
+                            <option value="ckd_care">CKD Care Management</option>
+                            <option value="diabetes_mgmt">Diabetes Intensive Management</option>
+                            <option value="care_coord">Care Coordination Program</option>
+                            <option value="remote_monitor">Remote Patient Monitoring</option>
+                            <option value="nutrition">Medical Nutrition Therapy</option>
+                            <option value="pharma_opt">Pharmacy Optimization</option>
+                            <option value="sdoh_support">SDOH Support Services</option>
+                            <option value="behavioral">Behavioral Health Integration</option>
+                            <option value="prevention">Prevention & Wellness</option>
+                        </select>
+                    </div>
+
+                    <div class="glass-card rounded-xl p-6">
+                        <h3 class="text-lg font-semibold text-optum-navy mb-4">Parameters</h3>
+                        <div class="space-y-6">
+                            <div>
+                                <div class="flex justify-between mb-2">
+                                    <label class="text-sm font-medium">Enrollment Rate</label>
+                                    <span id="enrollment-value" class="text-sm font-bold text-optum-orange">70%</span>
+                                </div>
+                                <input type="range" id="enrollment-slider" min="30" max="100" value="70" class="w-full slider">
+                            </div>
+                            <div>
+                                <div class="flex justify-between mb-2">
+                                    <label class="text-sm font-medium">Engagement Rate</label>
+                                    <span id="engagement-value" class="text-sm font-bold text-optum-orange">60%</span>
+                                </div>
+                                <input type="range" id="engagement-slider" min="30" max="100" value="60" class="w-full slider">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results -->
+                <div class="col-span-2 space-y-4 fade-up delay-2">
+                    <div class="grid grid-cols-4 gap-4">
+                        <div class="glass-card rounded-xl p-4 text-center">
+                            <div class="text-sm text-optum-gray">Cost Reduction</div>
+                            <div class="text-3xl font-bold text-cluster-4" id="result-reduction">12.5%</div>
+                        </div>
+                        <div class="glass-card rounded-xl p-4 text-center">
+                            <div class="text-sm text-optum-gray">Net Savings PMPY</div>
+                            <div class="text-3xl font-bold text-cluster-4" id="result-savings">$15,240</div>
+                        </div>
+                        <div class="glass-card rounded-xl p-4 text-center">
+                            <div class="text-sm text-optum-gray">ROI</div>
+                            <div class="text-3xl font-bold text-cluster-4" id="result-roi">285%</div>
+                        </div>
+                        <div class="glass-card rounded-xl p-4 text-center">
+                            <div class="text-sm text-optum-gray">Break-Even</div>
+                            <div class="text-3xl font-bold text-cluster-4" id="result-breakeven">4.2 mo</div>
+                        </div>
+                    </div>
+
+                    <div class="glass-card rounded-xl p-6">
+                        <h3 class="text-lg font-semibold text-optum-navy mb-4">24-Month Cost Projection</h3>
+                        <div id="scenario-chart" class="h-[300px]"></div>
+                    </div>
+
+                    <div class="llm-insight-box glass glass-card-dark rounded-xl p-6 text-white">
+                        <div class="flex items-center gap-2 mb-3">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3z"/>
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="font-semibold">AI Insight</span>
+                        </div>
+                        <p class="llm-text text-sm leading-relaxed" data-insight="scenario_cluster1_ckd"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Section Navigation -->
+        <div class="section-nav">
+            <button class="nav-btn nav-btn-prev" onclick="Navigation.prev()">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"/>
+                </svg>
+                Previous
+            </button>
+            <button class="nav-btn nav-btn-next" onclick="Navigation.next()">
+                Next
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                </svg>
+            </button>
+        </div>
+    </section>
+
+    <!-- Section 8: Timeline Projection -->
+    <section id="timeline" class="section min-h-screen py-20 px-12 section-gradient-3" data-section-index="7">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="text-3xl font-bold text-optum-navy mb-2 fade-up">Implementation Timeline</h2>
+            <p class="text-optum-gray mb-8 fade-up">24-month intervention impact projection</p>
+
+            <div class="fade-up delay-1">
+                <div class="glass-card rounded-xl p-8">
+                    <div id="timeline-chart" class="h-[400px]"></div>
+
+                    <!-- Milestones -->
+                    <div class="flex justify-between mt-8 px-8">
+                        <div class="text-center">
+                            <div class="w-12 h-12 rounded-full bg-optum-orange text-white flex items-center justify-center mx-auto mb-2">
+                                <span class="font-bold">1</span>
+                            </div>
+                            <div class="text-sm font-semibold">Program Launch</div>
+                            <div class="text-xs text-optum-gray">Month 1</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="w-12 h-12 rounded-full bg-optum-orange text-white flex items-center justify-center mx-auto mb-2">
+                                <span class="font-bold">2</span>
+                            </div>
+                            <div class="text-sm font-semibold">Full Enrollment</div>
+                            <div class="text-xs text-optum-gray">Month 3</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="w-12 h-12 rounded-full bg-cluster-4 text-white flex items-center justify-center mx-auto mb-2">
+                                <span class="font-bold">3</span>
+                            </div>
+                            <div class="text-sm font-semibold">Break-Even</div>
+                            <div class="text-xs text-optum-gray">Month 6</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="w-12 h-12 rounded-full bg-cluster-4 text-white flex items-center justify-center mx-auto mb-2">
+                                <span class="font-bold">4</span>
+                            </div>
+                            <div class="text-sm font-semibold">Outcome Review</div>
+                            <div class="text-xs text-optum-gray">Month 12</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="w-12 h-12 rounded-full bg-cluster-4 text-white flex items-center justify-center mx-auto mb-2">
+                                <span class="font-bold">5</span>
+                            </div>
+                            <div class="text-sm font-semibold">Program Maturity</div>
+                            <div class="text-xs text-optum-gray">Month 24</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-8 mt-8">
+                <div class="glass-card rounded-xl p-6 fade-up delay-2">
+                    <h3 class="text-lg font-semibold text-optum-navy mb-4">Year 1 Projection</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between">
+                            <span>Total Savings</span>
+                            <span class="font-bold text-cluster-4">$4.2M</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Members Impacted</span>
+                            <span class="font-bold">1,850</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Hospitalizations Avoided</span>
+                            <span class="font-bold">142</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card rounded-xl p-6 fade-up delay-3">
+                    <h3 class="text-lg font-semibold text-optum-navy mb-4">Year 2 Projection</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between">
+                            <span>Total Savings</span>
+                            <span class="font-bold text-cluster-4">$8.7M</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>ESRD Progressions Avoided</span>
+                            <span class="font-bold">28</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Quality Improvement</span>
+                            <span class="font-bold">+15 pts</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="llm-insight-box glass glass-card-dark rounded-xl p-6 text-white fade-up delay-4">
+                    <div class="flex items-center gap-2 mb-3">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3z"/>
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="font-semibold">AI Insight</span>
+                    </div>
+                    <p class="llm-text text-sm leading-relaxed" data-insight="timeline_projection"></p>
+                </div>
+            </div>
+        </div>
+        <!-- Section Navigation -->
+        <div class="section-nav">
+            <button class="nav-btn nav-btn-prev" onclick="Navigation.prev()">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"/>
+                </svg>
+                Previous
+            </button>
+            <button class="nav-btn nav-btn-next" onclick="Navigation.next()">
+                Next
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                </svg>
+            </button>
+        </div>
+    </section>
+
+    <!-- Section 9: Member Personas -->
+    <section id="persona" class="section min-h-screen py-20 px-12 section-gradient-4" data-section-index="8">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="text-3xl font-bold text-optum-navy mb-2 fade-up">Member Journey</h2>
+            <p class="text-optum-gray mb-8 fade-up">Real-world impact through individual stories</p>
+
+            <!-- Persona Toggle -->
+            <div class="flex justify-center gap-4 mb-8 fade-up delay-1">
+                <button class="persona-btn active px-6 py-3 rounded-lg font-medium" data-persona="james">
+                    James - Cardiac-DM Surge
+                </button>
+                <button class="persona-btn px-6 py-3 rounded-lg font-medium" data-persona="maria">
+                    Maria - Critical Renal
+                </button>
+            </div>
+
+            <!-- Persona Content -->
+            <div id="persona-content">
+                <!-- James Persona -->
+                <div class="persona-panel active" data-persona="james">
+                    <div class="grid grid-cols-3 gap-8">
+                        <div class="fade-up delay-2">
+                            <div class="glass-card rounded-xl p-6">
+                                <div class="flex items-center gap-4 mb-4">
+                                    <div class="w-16 h-16 rounded-full bg-cluster-2 flex items-center justify-center text-white text-2xl font-bold">J</div>
+                                    <div>
+                                        <div class="text-xl font-bold">James Thompson</div>
+                                        <div class="text-optum-gray">58 years old, Male</div>
+                                    </div>
+                                </div>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between">
+                                        <span>Segment</span>
+                                        <span class="font-semibold text-cluster-2">Cardiac-DM Surge</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>LOB</span>
+                                        <span class="font-semibold">Medicare</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>County</span>
+                                        <span class="font-semibold">Phillips (Delta)</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Current PMPY</span>
+                                        <span class="font-semibold text-cluster-2">$52,400</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="glass-card rounded-xl p-6 mt-4">
+                                <h3 class="text-lg font-semibold text-optum-navy mb-4">Clinical Status</h3>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between">
+                                        <span>A1C</span>
+                                        <span class="font-bold text-risk-high">10.2%</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>eGFR</span>
+                                        <span class="font-bold text-risk-medium">52 mL/min</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>BP</span>
+                                        <span class="font-bold">158/94</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>BMI</span>
+                                        <span class="font-bold">34.2</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="fade-up delay-3">
+                            <div class="glass-card rounded-xl p-6">
+                                <h3 class="text-lg font-semibold text-optum-navy mb-4">Risk Trajectory</h3>
+                                <div id="persona-trajectory-chart" class="h-[200px]"></div>
+                            </div>
+
+                            <div class="glass-card rounded-xl p-6 mt-4">
+                                <h3 class="text-lg font-semibold text-optum-navy mb-4">Key Challenges</h3>
+                                <div class="space-y-3">
+                                    <div class="flex items-start gap-2">
+                                        <svg class="w-5 h-5 text-risk-high flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <span class="text-sm">Food insecurity - limited access to healthy meals</span>
+                                    </div>
+                                    <div class="flex items-start gap-2">
+                                        <svg class="w-5 h-5 text-risk-high flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <span class="text-sm">Transportation barrier - 45 min to nearest specialist</span>
+                                    </div>
+                                    <div class="flex items-start gap-2">
+                                        <svg class="w-5 h-5 text-risk-medium flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <span class="text-sm">Medication adherence challenges</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="fade-up delay-4">
+                            <div class="glass-card rounded-xl p-6">
+                                <h3 class="text-lg font-semibold text-optum-navy mb-4">Recommended Interventions</h3>
+                                <div class="space-y-3">
+                                    <div class="p-3 bg-cluster-4 bg-opacity-10 rounded-lg border border-cluster-4">
+                                        <div class="font-semibold text-cluster-4">Diabetes Intensive Mgmt</div>
+                                        <div class="text-sm text-optum-gray">Est. A1C reduction: 2.1 points</div>
+                                    </div>
+                                    <div class="p-3 bg-cluster-5 bg-opacity-10 rounded-lg border border-cluster-5">
+                                        <div class="font-semibold text-cluster-5">SDOH Support Services</div>
+                                        <div class="text-sm text-optum-gray">Food delivery + transportation</div>
+                                    </div>
+                                    <div class="p-3 bg-optum-blue bg-opacity-10 rounded-lg border border-optum-blue">
+                                        <div class="font-semibold text-optum-blue">Remote Monitoring</div>
+                                        <div class="text-sm text-optum-gray">CGM + BP monitoring</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="llm-insight-box glass glass-card-dark rounded-xl p-6 text-white mt-4">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3z"/>
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <span class="font-semibold">AI Insight</span>
+                                </div>
+                                <p class="llm-text text-sm leading-relaxed" data-insight="persona_james"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Maria Persona (hidden by default) -->
+                <div class="persona-panel" data-persona="maria" style="display: none;">
+                    <div class="grid grid-cols-3 gap-8">
+                        <div class="fade-up delay-2">
+                            <div class="glass-card rounded-xl p-6">
+                                <div class="flex items-center gap-4 mb-4">
+                                    <div class="w-16 h-16 rounded-full bg-cluster-1 flex items-center justify-center text-white text-2xl font-bold">M</div>
+                                    <div>
+                                        <div class="text-xl font-bold">Maria Rodriguez</div>
+                                        <div class="text-optum-gray">72 years old, Female</div>
+                                    </div>
+                                </div>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between">
+                                        <span>Segment</span>
+                                        <span class="font-semibold text-cluster-1">Critical Renal</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>LOB</span>
+                                        <span class="font-semibold">DSNP</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>County</span>
+                                        <span class="font-semibold">Lee (Delta)</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Current PMPY</span>
+                                        <span class="font-semibold text-cluster-1">$142,800</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="glass-card rounded-xl p-6 mt-4">
+                                <h3 class="text-lg font-semibold text-optum-navy mb-4">Clinical Status</h3>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between">
+                                        <span>A1C</span>
+                                        <span class="font-bold text-risk-high">9.4%</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>eGFR</span>
+                                        <span class="font-bold text-risk-high">18 mL/min</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>BP</span>
+                                        <span class="font-bold text-risk-high">172/102</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>On Dialysis</span>
+                                        <span class="font-bold text-risk-high">Yes - 8 months</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="fade-up delay-3">
+                            <div class="glass-card rounded-xl p-6">
+                                <h3 class="text-lg font-semibold text-optum-navy mb-4">Cost Trajectory</h3>
+                                <div id="persona-maria-trajectory" class="h-[200px]"></div>
+                            </div>
+
+                            <div class="glass-card rounded-xl p-6 mt-4">
+                                <h3 class="text-lg font-semibold text-optum-navy mb-4">Key Challenges</h3>
+                                <div class="space-y-3">
+                                    <div class="flex items-start gap-2">
+                                        <svg class="w-5 h-5 text-risk-high flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <span class="text-sm">Vascular access complications - 2 revisions this year</span>
+                                    </div>
+                                    <div class="flex items-start gap-2">
+                                        <svg class="w-5 h-5 text-risk-high flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <span class="text-sm">Social isolation - limited family support</span>
+                                    </div>
+                                    <div class="flex items-start gap-2">
+                                        <svg class="w-5 h-5 text-risk-medium flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <span class="text-sm">Missed dialysis sessions - 3 in past month</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="fade-up delay-4">
+                            <div class="glass-card rounded-xl p-6">
+                                <h3 class="text-lg font-semibold text-optum-navy mb-4">Recommended Interventions</h3>
+                                <div class="space-y-3">
+                                    <div class="p-3 bg-cluster-1 bg-opacity-10 rounded-lg border border-cluster-1">
+                                        <div class="font-semibold text-cluster-1">CKD Care Management</div>
+                                        <div class="text-sm text-optum-gray">Intensive nephrology coordination</div>
+                                    </div>
+                                    <div class="p-3 bg-cluster-5 bg-opacity-10 rounded-lg border border-cluster-5">
+                                        <div class="font-semibold text-cluster-5">SDOH Support Services</div>
+                                        <div class="text-sm text-optum-gray">Transportation + social support</div>
+                                    </div>
+                                    <div class="p-3 bg-optum-blue bg-opacity-10 rounded-lg border border-optum-blue">
+                                        <div class="font-semibold text-optum-blue">Care Coordination</div>
+                                        <div class="text-sm text-optum-gray">Dialysis-PCP integration</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="llm-insight-box glass glass-card-dark rounded-xl p-6 text-white mt-4">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3z"/>
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <span class="font-semibold">AI Insight</span>
+                                </div>
+                                <p class="llm-text text-sm leading-relaxed" data-insight="persona_maria"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Section Navigation -->
+        <div class="section-nav">
+            <button class="nav-btn nav-btn-prev" onclick="Navigation.prev()">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"/>
+                </svg>
+                Previous
+            </button>
+            <button class="nav-btn nav-btn-next" onclick="Navigation.next()">
+                Next
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                </svg>
+            </button>
+        </div>
+    </section>
+
+    <!-- Section 10: Call to Action -->
+    <section id="cta" class="section min-h-screen py-20 px-12 flex items-center section-gradient-5" data-section-index="9">
+        <div class="max-w-7xl mx-auto w-full">
+            <div class="text-center mb-12 fade-up">
+                <h2 class="text-4xl font-bold text-optum-navy mb-4">Ready to Transform Outcomes?</h2>
+                <p class="text-xl text-optum-gray max-w-2xl mx-auto">
+                    Partner with Optum to implement precision population health strategies for your cardio-metabolic members.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-3 gap-8 mb-12">
+                <div class="glass-card rounded-xl p-8 text-center fade-up delay-1">
+                    <div class="w-16 h-16 rounded-full bg-optum-orange bg-opacity-10 flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-optum-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                    </div>
+                    <div class="text-3xl font-bold text-optum-navy mb-2">$12.9M</div>
+                    <div class="text-optum-gray">Projected 2-Year Savings</div>
+                </div>
+
+                <div class="glass-card rounded-xl p-8 text-center fade-up delay-2">
+                    <div class="w-16 h-16 rounded-full bg-cluster-4 bg-opacity-10 flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-cluster-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                        </svg>
+                    </div>
+                    <div class="text-3xl font-bold text-optum-navy mb-2">285%</div>
+                    <div class="text-optum-gray">Average ROI</div>
+                </div>
+
+                <div class="glass-card rounded-xl p-8 text-center fade-up delay-3">
+                    <div class="w-16 h-16 rounded-full bg-optum-blue bg-opacity-10 flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-optum-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                        </svg>
+                    </div>
+                    <div class="text-3xl font-bold text-optum-navy mb-2">2,316</div>
+                    <div class="text-optum-gray">Members Impacted</div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-8">
+                <div class="glass-card rounded-xl p-8 fade-up delay-4">
+                    <h3 class="text-xl font-bold text-optum-navy mb-6">Next Steps</h3>
+                    <div class="space-y-4">
+                        <div class="flex gap-4">
+                            <div class="w-8 h-8 rounded-full bg-optum-orange text-white flex items-center justify-center flex-shrink-0 font-bold">1</div>
+                            <div>
+                                <div class="font-semibold">Population Analysis Deep-Dive</div>
+                                <div class="text-sm text-optum-gray">Schedule detailed review with your claims data</div>
+                            </div>
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="w-8 h-8 rounded-full bg-optum-orange text-white flex items-center justify-center flex-shrink-0 font-bold">2</div>
+                            <div>
+                                <div class="font-semibold">Intervention Selection Workshop</div>
+                                <div class="text-sm text-optum-gray">Customize program to your network capabilities</div>
+                            </div>
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="w-8 h-8 rounded-full bg-optum-orange text-white flex items-center justify-center flex-shrink-0 font-bold">3</div>
+                            <div>
+                                <div class="font-semibold">Pilot Program Design</div>
+                                <div class="text-sm text-optum-gray">Start with high-impact cluster for rapid proof of value</div>
+                            </div>
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="w-8 h-8 rounded-full bg-optum-orange text-white flex items-center justify-center flex-shrink-0 font-bold">4</div>
+                            <div>
+                                <div class="font-semibold">Implementation & Scale</div>
+                                <div class="text-sm text-optum-gray">Full deployment with continuous optimization</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="llm-insight-box glass glass-card-dark rounded-xl p-8 text-white fade-up delay-5">
+                    <div class="flex items-center gap-2 mb-4">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3z"/>
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="text-lg font-semibold">AI Summary</span>
+                    </div>
+                    <p class="llm-text leading-relaxed" data-insight="executive_summary"></p>
+                </div>
+            </div>
+
+            <div class="text-center mt-12 fade-up delay-6">
+                <button class="bg-optum-orange hover:bg-orange-600 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-colors shadow-lg hover:shadow-xl">
+                    Schedule Consultation
+                </button>
+                <p class="text-sm text-optum-gray mt-4">Contact your Optum representative to begin</p>
+            </div>
+        </div>
+        <!-- Section Navigation -->
+        <div class="section-nav">
+            <button class="nav-btn nav-btn-prev" onclick="Navigation.prev()">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"/>
+                </svg>
+                Previous
+            </button>
+            <button class="nav-btn nav-btn-next" onclick="Navigation.goTo(0)">
+                Restart
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+            </button>
+        </div>
+    </section>
+    </main>
+
+    <!-- Global Navigation Buttons -->
+    <div id="global-nav">
+        <button class="nav-btn nav-btn-prev" id="nav-prev" onclick="Navigation.prev()">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"/>
+            </svg>
+            Previous
+        </button>
+        <button class="nav-btn nav-btn-next" id="nav-next" onclick="Navigation.next()">
+            Next
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Data Files -->
+    <script src="js/data/geojson.js"></script>
+    <script src="js/data/members.js"></script>
+    <script src="js/data/clusters.js"></script>
+    <script src="js/data/counties.js"></script>
+    <script src="js/data/scenarios.js"></script>
+    <script src="js/data/projections.js"></script>
+    <script src="js/data/interventions.js"></script>
+    <script src="js/data/davita.js"></script>
+    <script src="js/data/regions.js"></script>
+    <script src="js/data/responses.js"></script>
+
+    <!-- Chart Modules -->
+    <script src="js/charts/mapChart.js"></script>
+    <script src="js/charts/populationCharts.js"></script>
+    <script src="js/charts/clusterCharts.js"></script>
+    <script src="js/charts/scenarioCharts.js"></script>
+    <script src="js/charts/timelineChart.js"></script>
+
+    <!-- Component Modules -->
+    <script src="js/components/navigation.js"></script>
+    <script src="js/components/detailPanel.js"></script>
+    <script src="js/components/scenarioSimulator.js"></script>
+    <script src="js/components/llmInsight.js"></script>
+
+    <!-- Animation Module -->
+    <script src="js/animations/scrollAnimations.js"></script>
+
+    <!-- Main App -->
+    <script src="js/app.js"></script>
+</body>
+</html>
