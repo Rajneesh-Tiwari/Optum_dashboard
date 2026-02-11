@@ -1,597 +1,594 @@
 #!/usr/bin/env python3
 """
 Generate synthetic data for Optum Cardio-Metabolic Population Health Demo.
-Outputs JavaScript files for offline browser use.
+6 clusters, 500 members, 90+ features. Outputs JSON for React app.
 """
 
 import json
 import random
-from datetime import datetime, timedelta
-from collections import defaultdict
+import math
 
 random.seed(42)
 
-# Arkansas counties with regions and characteristics
-ARKANSAS_COUNTIES = [
-    # Delta Region - high ESRD, high costs, rural
-    {"name": "Phillips", "fips": "05107", "region": "Delta", "population": 18000, "risk_mult": 1.4},
-    {"name": "Lee", "fips": "05077", "region": "Delta", "population": 9000, "risk_mult": 1.5},
-    {"name": "Chicot", "fips": "05017", "region": "Delta", "population": 10500, "risk_mult": 1.45},
-    {"name": "Desha", "fips": "05041", "region": "Delta", "population": 11500, "risk_mult": 1.35},
-    {"name": "Arkansas", "fips": "05001", "region": "Delta", "population": 17800, "risk_mult": 1.3},
-    {"name": "Monroe", "fips": "05095", "region": "Delta", "population": 6800, "risk_mult": 1.5},
-    {"name": "St. Francis", "fips": "05123", "region": "Delta", "population": 25000, "risk_mult": 1.4},
-    {"name": "Crittenden", "fips": "05035", "region": "Delta", "population": 48000, "risk_mult": 1.35},
-    {"name": "Cross", "fips": "05037", "region": "Delta", "population": 16500, "risk_mult": 1.3},
-    {"name": "Woodruff", "fips": "05147", "region": "Delta", "population": 6500, "risk_mult": 1.45},
-    {"name": "Prairie", "fips": "05117", "region": "Delta", "population": 8100, "risk_mult": 1.25},
-    {"name": "Lonoke", "fips": "05085", "region": "Delta", "population": 73000, "risk_mult": 1.15},
+N_MEMBERS = 500
 
-    # Northwest Arkansas - lower risk, better access
-    {"name": "Benton", "fips": "05007", "region": "Northwest", "population": 284000, "risk_mult": 0.85},
-    {"name": "Washington", "fips": "05143", "region": "Northwest", "population": 245000, "risk_mult": 0.88},
-    {"name": "Carroll", "fips": "05015", "region": "Northwest", "population": 28500, "risk_mult": 0.95},
-    {"name": "Madison", "fips": "05087", "region": "Northwest", "population": 16500, "risk_mult": 0.98},
-    {"name": "Boone", "fips": "05009", "region": "Northwest", "population": 37500, "risk_mult": 0.92},
-    {"name": "Newton", "fips": "05101", "region": "Northwest", "population": 7800, "risk_mult": 1.0},
-    {"name": "Searcy", "fips": "05129", "region": "Northwest", "population": 7900, "risk_mult": 1.02},
-    {"name": "Marion", "fips": "05089", "region": "Northwest", "population": 16800, "risk_mult": 0.95},
-    {"name": "Baxter", "fips": "05005", "region": "Northwest", "population": 41500, "risk_mult": 0.9},
-
-    # Little Rock Metro - moderate risk, good access
-    {"name": "Pulaski", "fips": "05119", "region": "Little Rock", "population": 400000, "risk_mult": 1.0},
-    {"name": "Saline", "fips": "05125", "region": "Little Rock", "population": 125000, "risk_mult": 0.92},
-    {"name": "Faulkner", "fips": "05045", "region": "Little Rock", "population": 130000, "risk_mult": 0.95},
-    {"name": "Perry", "fips": "05105", "region": "Little Rock", "population": 10400, "risk_mult": 1.05},
-    {"name": "Grant", "fips": "05053", "region": "Little Rock", "population": 18200, "risk_mult": 1.02},
-    {"name": "White", "fips": "05145", "region": "Little Rock", "population": 80000, "risk_mult": 1.0},
-
-    # Southwest Arkansas
-    {"name": "Miller", "fips": "05091", "region": "Southwest", "population": 43500, "risk_mult": 1.15},
-    {"name": "Lafayette", "fips": "05073", "region": "Southwest", "population": 6600, "risk_mult": 1.25},
-    {"name": "Columbia", "fips": "05027", "region": "Southwest", "population": 23500, "risk_mult": 1.2},
-    {"name": "Union", "fips": "05139", "region": "Southwest", "population": 39000, "risk_mult": 1.18},
-    {"name": "Ouachita", "fips": "05103", "region": "Southwest", "population": 23600, "risk_mult": 1.22},
-    {"name": "Calhoun", "fips": "05013", "region": "Southwest", "population": 5000, "risk_mult": 1.28},
-    {"name": "Bradley", "fips": "05011", "region": "Southwest", "population": 10600, "risk_mult": 1.2},
-    {"name": "Drew", "fips": "05043", "region": "Southwest", "population": 18500, "risk_mult": 1.15},
-    {"name": "Ashley", "fips": "05003", "region": "Southwest", "population": 19600, "risk_mult": 1.25},
-    {"name": "Hempstead", "fips": "05057", "region": "Southwest", "population": 21800, "risk_mult": 1.18},
-    {"name": "Nevada", "fips": "05099", "region": "Southwest", "population": 8400, "risk_mult": 1.22},
-    {"name": "Clark", "fips": "05019", "region": "Southwest", "population": 22100, "risk_mult": 1.1},
-    {"name": "Pike", "fips": "05109", "region": "Southwest", "population": 10700, "risk_mult": 1.15},
-    {"name": "Howard", "fips": "05061", "region": "Southwest", "population": 13200, "risk_mult": 1.12},
-    {"name": "Sevier", "fips": "05133", "region": "Southwest", "population": 17200, "risk_mult": 1.1},
-    {"name": "Little River", "fips": "05081", "region": "Southwest", "population": 12300, "risk_mult": 1.18},
-    {"name": "Hot Spring", "fips": "05059", "region": "Southwest", "population": 34200, "risk_mult": 1.08},
-    {"name": "Dallas", "fips": "05039", "region": "Southwest", "population": 7200, "risk_mult": 1.25},
-    {"name": "Cleveland", "fips": "05025", "region": "Southwest", "population": 8000, "risk_mult": 1.15},
-
-    # River Valley
-    {"name": "Sebastian", "fips": "05131", "region": "River Valley", "population": 128000, "risk_mult": 1.05},
-    {"name": "Crawford", "fips": "05033", "region": "River Valley", "population": 64000, "risk_mult": 1.0},
-    {"name": "Franklin", "fips": "05047", "region": "River Valley", "population": 17800, "risk_mult": 1.08},
-    {"name": "Johnson", "fips": "05071", "region": "River Valley", "population": 26500, "risk_mult": 1.05},
-    {"name": "Logan", "fips": "05083", "region": "River Valley", "population": 21500, "risk_mult": 1.1},
-    {"name": "Scott", "fips": "05127", "region": "River Valley", "population": 10500, "risk_mult": 1.15},
-    {"name": "Polk", "fips": "05113", "region": "River Valley", "population": 19800, "risk_mult": 1.12},
-    {"name": "Montgomery", "fips": "05097", "region": "River Valley", "population": 8800, "risk_mult": 1.15},
-    {"name": "Garland", "fips": "05051", "region": "River Valley", "population": 99500, "risk_mult": 1.02},
-    {"name": "Yell", "fips": "05149", "region": "River Valley", "population": 21700, "risk_mult": 1.12},
-    {"name": "Pope", "fips": "05115", "region": "River Valley", "population": 64000, "risk_mult": 1.0},
-    {"name": "Conway", "fips": "05029", "region": "River Valley", "population": 20900, "risk_mult": 1.08},
-    {"name": "Van Buren", "fips": "05141", "region": "River Valley", "population": 16600, "risk_mult": 1.1},
-    {"name": "Cleburne", "fips": "05023", "region": "River Valley", "population": 25500, "risk_mult": 1.05},
-    {"name": "Stone", "fips": "05135", "region": "River Valley", "population": 12600, "risk_mult": 1.08},
-    {"name": "Izard", "fips": "05065", "region": "River Valley", "population": 13500, "risk_mult": 1.1},
-    {"name": "Independence", "fips": "05063", "region": "River Valley", "population": 37800, "risk_mult": 1.05},
-    {"name": "Sharp", "fips": "05135", "region": "River Valley", "population": 17100, "risk_mult": 1.12},
-    {"name": "Fulton", "fips": "05049", "region": "River Valley", "population": 12200, "risk_mult": 1.15},
-    {"name": "Randolph", "fips": "05121", "region": "River Valley", "population": 17500, "risk_mult": 1.1},
-    {"name": "Lawrence", "fips": "05075", "region": "River Valley", "population": 16600, "risk_mult": 1.12},
-    {"name": "Jackson", "fips": "05067", "region": "River Valley", "population": 16900, "risk_mult": 1.18},
-    {"name": "Poinsett", "fips": "05111", "region": "River Valley", "population": 23800, "risk_mult": 1.2},
-    {"name": "Craighead", "fips": "05031", "region": "River Valley", "population": 110000, "risk_mult": 0.98},
-    {"name": "Greene", "fips": "05055", "region": "River Valley", "population": 45500, "risk_mult": 1.02},
-    {"name": "Clay", "fips": "05021", "region": "River Valley", "population": 14500, "risk_mult": 1.15},
-    {"name": "Mississippi", "fips": "05093", "region": "River Valley", "population": 41000, "risk_mult": 1.25},
-    {"name": "Jefferson", "fips": "05069", "region": "River Valley", "population": 66000, "risk_mult": 1.2},
-    {"name": "Lincoln", "fips": "05079", "region": "River Valley", "population": 13500, "risk_mult": 1.22},
-]
-
-# Cluster definitions
+# Cluster definitions per PRD
 CLUSTERS = {
     1: {
-        "name": "High-Risk ESRD Progression",
-        "description": "Members with advanced CKD at high risk of dialysis initiation",
+        "name": "At-Risk Baseline",
+        "short": "Mild Hypertension",
         "color": "#EF4444",
-        "avg_age": 68,
-        "hcc_range": (2.8, 4.5),
-        "a1c_range": (8.5, 12.0),
-        "egfr_range": (15, 35),
-        "bp_systolic_range": (145, 180),
-        "pmpy_range": (85000, 130000),
-        "conditions": ["CKD Stage 4-5", "Diabetes", "Hypertension", "CHF"],
-        "utilization": {"er_visits": 4.2, "hospitalizations": 2.1, "specialist_visits": 12.5}
+        "count_pct": 0.20,
+        "age_range": (30, 55),
+        "gender_split": 0.5,
     },
     2: {
-        "name": "Uncontrolled Diabetes with Cardiac Risk",
-        "description": "Members with poorly controlled diabetes and elevated cardiovascular risk",
+        "name": "Unmanaged Metabolic Syndrome",
+        "short": "Diabetes + Hypertension",
         "color": "#F97316",
-        "avg_age": 58,
-        "hcc_range": (1.8, 2.8),
-        "a1c_range": (9.0, 13.0),
-        "egfr_range": (45, 75),
-        "bp_systolic_range": (140, 165),
-        "pmpy_range": (35000, 65000),
-        "conditions": ["Diabetes", "Hypertension", "Hyperlipidemia", "Pre-CHF"],
-        "utilization": {"er_visits": 2.8, "hospitalizations": 0.9, "specialist_visits": 8.2}
+        "count_pct": 0.18,
+        "age_range": (40, 65),
+        "gender_split": 0.45,
     },
     3: {
-        "name": "Metabolic Syndrome - Rising Risk",
-        "description": "Members with metabolic syndrome showing trajectory toward complications",
+        "name": "Advanced Heart Failure",
+        "short": "Cardiac High-Acuity",
         "color": "#EAB308",
-        "avg_age": 52,
-        "hcc_range": (1.2, 1.8),
-        "a1c_range": (6.5, 8.5),
-        "egfr_range": (60, 90),
-        "bp_systolic_range": (130, 150),
-        "pmpy_range": (15000, 35000),
-        "conditions": ["Pre-diabetes", "Obesity", "Hypertension", "Dyslipidemia"],
-        "utilization": {"er_visits": 1.2, "hospitalizations": 0.3, "specialist_visits": 4.5}
+        "count_pct": 0.15,
+        "age_range": (60, 85),
+        "gender_split": 0.6,
     },
     4: {
-        "name": "Stable Chronic Management",
-        "description": "Well-controlled chronic conditions with stable trajectory",
+        "name": "Diabetic Nephropathy / ESRD",
+        "short": "Kidney Disease",
         "color": "#22C55E",
-        "avg_age": 62,
-        "hcc_range": (0.8, 1.4),
-        "a1c_range": (6.0, 7.5),
-        "egfr_range": (70, 100),
-        "bp_systolic_range": (120, 138),
-        "pmpy_range": (8000, 18000),
-        "conditions": ["Controlled Diabetes", "Managed Hypertension"],
-        "utilization": {"er_visits": 0.5, "hospitalizations": 0.1, "specialist_visits": 3.2}
+        "count_pct": 0.15,
+        "age_range": (50, 75),
+        "gender_split": 0.55,
     },
     5: {
-        "name": "Prevention Opportunity",
-        "description": "At-risk members with opportunity for early intervention",
+        "name": "Rural SDOH Crisis",
+        "short": "Arkansas Delta Profile",
         "color": "#3B82F6",
-        "avg_age": 45,
-        "hcc_range": (0.5, 1.0),
-        "a1c_range": (5.5, 6.4),
-        "egfr_range": (85, 110),
-        "bp_systolic_range": (115, 135),
-        "pmpy_range": (3000, 10000),
-        "conditions": ["Overweight", "Pre-hypertension", "Family History"],
-        "utilization": {"er_visits": 0.3, "hospitalizations": 0.05, "specialist_visits": 1.5}
-    }
+        "count_pct": 0.17,
+        "age_range": (35, 70),
+        "gender_split": 0.48,
+    },
+    6: {
+        "name": "Frail Elderly Complex",
+        "short": "Geriatric Cardio-Metabolic",
+        "color": "#8B5CF6",
+        "count_pct": 0.15,
+        "age_range": (75, 95),
+        "gender_split": 0.42,
+    },
 }
 
-# Line of business distribution and cluster weights
-LOB_CONFIG = {
-    "DSNP": {
-        "count": 1000,
-        "cluster_weights": {1: 0.12, 2: 0.25, 3: 0.28, 4: 0.20, 5: 0.15},
-        "avg_age_adj": 5,
-        "cost_mult": 1.15
-    },
-    "Medicare": {
-        "count": 1200,
-        "cluster_weights": {1: 0.10, 2: 0.22, 3: 0.25, 4: 0.25, 5: 0.18},
-        "avg_age_adj": 8,
-        "cost_mult": 1.0
-    },
-    "Medicaid": {
-        "count": 1000,
-        "cluster_weights": {1: 0.08, 2: 0.20, 3: 0.30, 4: 0.22, 5: 0.20},
-        "avg_age_adj": -10,
-        "cost_mult": 0.85
-    },
-    "Commercial": {
-        "count": 800,
-        "cluster_weights": {1: 0.05, 2: 0.15, 3: 0.25, 4: 0.28, 5: 0.27},
-        "avg_age_adj": -15,
-        "cost_mult": 0.95
-    }
-}
-
-INTERVENTIONS = [
-    {"id": "ckd_care", "name": "CKD Care Management", "target_clusters": [1, 2], "cost_reduction": 0.18, "monthly_cost": 450},
-    {"id": "diabetes_mgmt", "name": "Diabetes Intensive Management", "target_clusters": [2, 3], "cost_reduction": 0.15, "monthly_cost": 280},
-    {"id": "care_coord", "name": "Care Coordination Program", "target_clusters": [1, 2, 3], "cost_reduction": 0.12, "monthly_cost": 200},
-    {"id": "remote_monitor", "name": "Remote Patient Monitoring", "target_clusters": [1, 2], "cost_reduction": 0.14, "monthly_cost": 180},
-    {"id": "nutrition", "name": "Medical Nutrition Therapy", "target_clusters": [2, 3, 4], "cost_reduction": 0.08, "monthly_cost": 120},
-    {"id": "pharma_opt", "name": "Pharmacy Optimization", "target_clusters": [1, 2, 3], "cost_reduction": 0.10, "monthly_cost": 90},
-    {"id": "sdoh_support", "name": "SDOH Support Services", "target_clusters": [1, 2], "cost_reduction": 0.11, "monthly_cost": 250},
-    {"id": "behavioral", "name": "Behavioral Health Integration", "target_clusters": [2, 3], "cost_reduction": 0.09, "monthly_cost": 200},
-    {"id": "prevention", "name": "Prevention & Wellness", "target_clusters": [3, 4, 5], "cost_reduction": 0.06, "monthly_cost": 80},
+ARKANSAS_COUNTIES = [
+    {"name": "Phillips", "region": "Delta", "risk_mult": 1.4},
+    {"name": "Lee", "region": "Delta", "risk_mult": 1.5},
+    {"name": "Chicot", "region": "Delta", "risk_mult": 1.45},
+    {"name": "Desha", "region": "Delta", "risk_mult": 1.35},
+    {"name": "Monroe", "region": "Delta", "risk_mult": 1.5},
+    {"name": "St. Francis", "region": "Delta", "risk_mult": 1.4},
+    {"name": "Crittenden", "region": "Delta", "risk_mult": 1.35},
+    {"name": "Benton", "region": "Northwest", "risk_mult": 0.85},
+    {"name": "Washington", "region": "Northwest", "risk_mult": 0.88},
+    {"name": "Carroll", "region": "Northwest", "risk_mult": 0.95},
+    {"name": "Pulaski", "region": "Little Rock", "risk_mult": 1.0},
+    {"name": "Saline", "region": "Little Rock", "risk_mult": 0.92},
+    {"name": "Faulkner", "region": "Little Rock", "risk_mult": 0.95},
+    {"name": "Miller", "region": "Southwest", "risk_mult": 1.15},
+    {"name": "Columbia", "region": "Southwest", "risk_mult": 1.2},
+    {"name": "Union", "region": "Southwest", "risk_mult": 1.18},
+    {"name": "Sebastian", "region": "River Valley", "risk_mult": 1.05},
+    {"name": "Crawford", "region": "River Valley", "risk_mult": 1.0},
+    {"name": "Garland", "region": "River Valley", "risk_mult": 1.02},
+    {"name": "Craighead", "region": "River Valley", "risk_mult": 0.98},
 ]
 
-
-def generate_member_id():
-    return f"MBR{random.randint(100000, 999999)}"
+DELTA_COUNTIES = [c for c in ARKANSAS_COUNTIES if c["region"] == "Delta"]
 
 
-def weighted_choice(weights):
-    """Select from weighted dict."""
-    items = list(weights.keys())
-    probs = list(weights.values())
-    return random.choices(items, weights=probs, k=1)[0]
+def clamp(val, lo, hi):
+    return max(lo, min(hi, val))
 
 
-def generate_member(lob, cluster_id, county, is_davita=False, is_complex_frail=False, is_non_outreach=False):
-    """Generate a single member record."""
-    cluster = CLUSTERS[cluster_id]
-    lob_config = LOB_CONFIG[lob]
+def rand_gauss(mean, std, lo=None, hi=None):
+    v = random.gauss(mean, std)
+    if lo is not None:
+        v = max(lo, v)
+    if hi is not None:
+        v = min(hi, v)
+    return v
 
-    # Base demographics
-    base_age = cluster["avg_age"] + lob_config["avg_age_adj"]
-    age = max(18, min(95, int(random.gauss(base_age, 8))))
-    gender = random.choice(["M", "F"])
 
-    # Clinical markers with variation
-    hcc_score = round(random.uniform(*cluster["hcc_range"]), 2)
-    a1c = round(random.uniform(*cluster["a1c_range"]), 1)
-    egfr = round(random.uniform(*cluster["egfr_range"]), 0)
-    bp_systolic = int(random.uniform(*cluster["bp_systolic_range"]))
-    bp_diastolic = int(bp_systolic * random.uniform(0.55, 0.65))
-    bmi = round(random.uniform(24, 42), 1)
-    ldl = int(random.uniform(90, 180))
+def generate_member(member_id, cluster_id):
+    c = CLUSTERS[cluster_id]
+    age = int(rand_gauss(
+        (c["age_range"][0] + c["age_range"][1]) / 2,
+        (c["age_range"][1] - c["age_range"][0]) / 4,
+        c["age_range"][0], c["age_range"][1]
+    ))
+    gender = "M" if random.random() < c["gender_split"] else "F"
+    state = "AR"
+    total_months = random.randint(6, 60)
 
-    # Cost with variation and multipliers
-    base_pmpy = random.uniform(*cluster["pmpy_range"])
-    cost_mult = lob_config["cost_mult"] * county["risk_mult"]
+    # Assign county - cluster 5 biased to Delta
+    if cluster_id == 5 and random.random() < 0.7:
+        county = random.choice(DELTA_COUNTIES)
+    else:
+        county = random.choice(ARKANSAS_COUNTIES)
 
-    # DaVita planted insight - higher costs
-    if is_davita and cluster_id == 1:
-        cost_mult *= 1.43  # ~$107K vs $75K
+    # LOB
+    if cluster_id in (3, 6):
+        lob = random.choice(["Medicare", "Medicare", "DSNP"])
+    elif cluster_id == 5:
+        lob = random.choice(["Medicaid", "DSNP", "Medicaid"])
+    else:
+        lob = random.choice(["Medicare", "Medicaid", "Commercial", "DSNP"])
 
-    # Complex frail sub-cluster
-    if is_complex_frail:
-        cost_mult *= 1.25
-        hcc_score *= 1.3
-        age = max(75, age + 10)
+    # -- SDOH Features --
+    if cluster_id == 5:
+        acs_pct_unemploy = round(rand_gauss(18, 5, 5, 35), 1)
+        acs_pct_no_fd_stmp = round(rand_gauss(40, 10, 15, 70), 1)
+        acs_pct_lt_hs = round(rand_gauss(25, 6, 8, 45), 1)
+        hifld_dist_uc = round(rand_gauss(45, 15, 15, 90), 1)
+        pos_dist_ed = round(rand_gauss(35, 10, 10, 70), 1)
+        acs_pct_no_internet = round(rand_gauss(35, 10, 10, 60), 1)
+        acs_pct_no_car = round(rand_gauss(15, 5, 3, 35), 1)
+        hrsn_flag = 1
+    else:
+        acs_pct_unemploy = round(rand_gauss(8, 3, 2, 20), 1)
+        acs_pct_no_fd_stmp = round(rand_gauss(20, 8, 5, 50), 1)
+        acs_pct_lt_hs = round(rand_gauss(12, 4, 3, 30), 1)
+        hifld_dist_uc = round(rand_gauss(12, 8, 1, 40), 1)
+        pos_dist_ed = round(rand_gauss(10, 6, 1, 35), 1)
+        acs_pct_no_internet = round(rand_gauss(12, 5, 2, 30), 1)
+        acs_pct_no_car = round(rand_gauss(5, 3, 1, 15), 1)
+        hrsn_flag = 1 if random.random() < 0.15 else 0
 
-    pmpy = int(base_pmpy * cost_mult)
-
-    # Utilization
-    util = cluster["utilization"]
-    er_visits = max(0, int(random.gauss(util["er_visits"], util["er_visits"] * 0.3)))
-    hospitalizations = max(0, int(random.gauss(util["hospitalizations"], util["hospitalizations"] * 0.4)))
-    specialist_visits = max(0, int(random.gauss(util["specialist_visits"], util["specialist_visits"] * 0.25)))
-
-    # Risk trajectory
-    if cluster_id <= 2:
-        trajectory = random.choices(["deteriorating", "stable", "improving"], weights=[0.5, 0.35, 0.15])[0]
+    # -- Clinical Utilization --
+    if cluster_id == 1:
+        cnt_er = int(rand_gauss(0.8, 0.8, 0, 5))
+        cnt_pcp = int(rand_gauss(3, 1.5, 0, 10))
+        cnt_readmit_30 = 0 if random.random() > 0.05 else 1
+        cardiology_cnt = int(rand_gauss(0.5, 0.5, 0, 3))
+        endocrinology_cnt = int(rand_gauss(0.3, 0.3, 0, 2))
+        nephrology_cnt = 0
+        neurology_cnt = int(rand_gauss(0.2, 0.3, 0, 2))
+        preventive_cnt = int(rand_gauss(1.5, 1, 0, 5))
+    elif cluster_id == 2:
+        cnt_er = int(rand_gauss(1.5, 1, 0, 6))
+        cnt_pcp = int(rand_gauss(4, 2, 1, 12))
+        cnt_readmit_30 = 1 if random.random() < 0.12 else 0
+        cardiology_cnt = int(rand_gauss(1.5, 1, 0, 5))
+        endocrinology_cnt = int(rand_gauss(4, 1.5, 1, 8))
+        nephrology_cnt = int(rand_gauss(0.5, 0.5, 0, 3))
+        neurology_cnt = int(rand_gauss(0.3, 0.4, 0, 2))
+        preventive_cnt = int(rand_gauss(1, 1, 0, 4))
     elif cluster_id == 3:
-        trajectory = random.choices(["deteriorating", "stable", "improving"], weights=[0.3, 0.45, 0.25])[0]
-    else:
-        trajectory = random.choices(["deteriorating", "stable", "improving"], weights=[0.1, 0.6, 0.3])[0]
+        cnt_er = int(rand_gauss(3, 1.5, 0, 10))
+        cnt_pcp = int(rand_gauss(3, 1.5, 0, 8))
+        cnt_readmit_30 = 1 if random.random() < 0.35 else 0
+        cardiology_cnt = int(rand_gauss(6, 2, 2, 12))
+        endocrinology_cnt = int(rand_gauss(1, 1, 0, 4))
+        nephrology_cnt = int(rand_gauss(0.8, 0.8, 0, 4))
+        neurology_cnt = int(rand_gauss(1, 0.8, 0, 4))
+        preventive_cnt = int(rand_gauss(0.5, 0.5, 0, 3))
+    elif cluster_id == 4:
+        cnt_er = int(rand_gauss(2, 1.2, 0, 8))
+        cnt_pcp = int(rand_gauss(4, 2, 1, 10))
+        cnt_readmit_30 = 1 if random.random() < 0.25 else 0
+        cardiology_cnt = int(rand_gauss(2, 1, 0, 6))
+        endocrinology_cnt = int(rand_gauss(3, 1.5, 1, 7))
+        nephrology_cnt = int(rand_gauss(5, 2, 2, 10))
+        neurology_cnt = int(rand_gauss(0.5, 0.5, 0, 3))
+        preventive_cnt = int(rand_gauss(1, 0.8, 0, 4))
+    elif cluster_id == 5:
+        cnt_er = max(0, int(random.expovariate(1/4)))
+        cnt_pcp = 0
+        cnt_readmit_30 = 1 if random.random() < 0.18 else 0
+        cardiology_cnt = int(rand_gauss(0.3, 0.3, 0, 2))
+        endocrinology_cnt = int(rand_gauss(0.2, 0.3, 0, 2))
+        nephrology_cnt = int(rand_gauss(0.2, 0.3, 0, 2))
+        neurology_cnt = 0
+        preventive_cnt = 0
+    else:  # cluster 6
+        cnt_er = int(rand_gauss(2.5, 1.5, 0, 8))
+        cnt_pcp = int(rand_gauss(5, 2, 1, 12))
+        cnt_readmit_30 = 1 if random.random() < 0.30 else 0
+        cardiology_cnt = int(rand_gauss(4, 1.5, 1, 8))
+        endocrinology_cnt = int(rand_gauss(2, 1, 0, 5))
+        nephrology_cnt = int(rand_gauss(1.5, 1, 0, 5))
+        neurology_cnt = int(rand_gauss(2, 1, 0, 6))
+        preventive_cnt = int(rand_gauss(1, 0.8, 0, 4))
 
-    # SDOH factors
-    sdoh_score = round(random.uniform(0.3, 0.9) * (1 / county["risk_mult"]), 2)
-    food_insecurity = random.random() < (0.4 * county["risk_mult"])
-    transportation_barrier = random.random() < (0.35 * county["risk_mult"])
+    # -- Cardiometabolic Diagnostics --
+    if cluster_id == 1:
+        diabetes_flag = 1 if random.random() < 0.15 else 0
+        hyper_flag = 1 if random.random() < 0.60 else 0
+        heart_flag = 1 if random.random() < 0.05 else 0
+        stroke_flag = 0
+        kidney_flag = 0
+        esrd_flag = 0
+        cardio_circul_flag = 1 if random.random() < 0.10 else 0
+        avg_severity = round(rand_gauss(1.2, 0.3, 1, 2), 1)
+    elif cluster_id == 2:
+        diabetes_flag = 1
+        hyper_flag = 1
+        heart_flag = 1 if random.random() < 0.20 else 0
+        stroke_flag = 1 if random.random() < 0.05 else 0
+        kidney_flag = 1 if random.random() < 0.15 else 0
+        esrd_flag = 0
+        cardio_circul_flag = 1 if random.random() < 0.25 else 0
+        avg_severity = round(rand_gauss(2.5, 0.5, 1.5, 4), 1)
+    elif cluster_id == 3:
+        diabetes_flag = 1 if random.random() < 0.40 else 0
+        hyper_flag = 1 if random.random() < 0.70 else 0
+        heart_flag = 1
+        stroke_flag = 1 if random.random() < 0.20 else 0
+        kidney_flag = 1 if random.random() < 0.25 else 0
+        esrd_flag = 1 if random.random() < 0.10 else 0
+        cardio_circul_flag = 1
+        avg_severity = round(rand_gauss(3.5, 0.5, 2.5, 5), 1)
+    elif cluster_id == 4:
+        diabetes_flag = 1
+        hyper_flag = 1 if random.random() < 0.80 else 0
+        heart_flag = 1 if random.random() < 0.30 else 0
+        stroke_flag = 1 if random.random() < 0.10 else 0
+        kidney_flag = 1
+        esrd_flag = 1 if random.random() < 0.80 else 0
+        cardio_circul_flag = 1 if random.random() < 0.35 else 0
+        avg_severity = round(rand_gauss(3.8, 0.4, 3, 5), 1)
+    elif cluster_id == 5:
+        diabetes_flag = 1 if random.random() < 0.70 else 0
+        hyper_flag = 1 if random.random() < 0.50 else 0
+        heart_flag = 1 if random.random() < 0.10 else 0
+        stroke_flag = 0
+        kidney_flag = 1 if random.random() < 0.10 else 0
+        esrd_flag = 0
+        cardio_circul_flag = 1 if random.random() < 0.10 else 0
+        avg_severity = round(rand_gauss(2.0, 0.5, 1, 3.5), 1)
+    else:  # cluster 6
+        diabetes_flag = 1 if random.random() < 0.55 else 0
+        hyper_flag = 1 if random.random() < 0.75 else 0
+        heart_flag = 1
+        stroke_flag = 1 if random.random() < 0.30 else 0
+        kidney_flag = 1 if random.random() < 0.35 else 0
+        esrd_flag = 1 if random.random() < 0.15 else 0
+        cardio_circul_flag = 1 if random.random() < 0.60 else 0
+        avg_severity = round(rand_gauss(3.8, 0.5, 2.5, 5), 1)
 
-    # Engagement status
-    if is_non_outreach:
-        engagement = "non_outreach"
-        last_pcp_months = random.randint(18, 36)
+    # -- Risk & Vulnerability --
+    if cluster_id == 6:
+        frailty_index = round(rand_gauss(0.28, 0.07, 0.15, 0.40), 3)
+        charleston_cci = random.randint(4, 9)
+    elif cluster_id == 3:
+        frailty_index = round(rand_gauss(0.15, 0.05, 0.05, 0.30), 3)
+        charleston_cci = random.randint(3, 7)
+    elif cluster_id == 4:
+        frailty_index = round(rand_gauss(0.12, 0.05, 0.03, 0.25), 3)
+        charleston_cci = random.randint(3, 6)
     else:
-        engagement = random.choices(["active", "passive", "disengaged"], weights=[0.4, 0.35, 0.25])[0]
-        last_pcp_months = random.randint(1, 18)
+        frailty_index = round(rand_gauss(0.05, 0.03, 0.01, 0.15), 3)
+        charleston_cci = random.randint(0, 3)
 
-    # Provider
-    if is_davita:
-        dialysis_provider = "DaVita"
-    elif cluster_id == 1 and random.random() < 0.3:
-        dialysis_provider = random.choice(["Fresenius", "Independent", None])
+    lab_cost_risk = round(rand_gauss(
+        {1: 5, 2: 15, 3: 25, 4: 30, 5: 8, 6: 22}[cluster_id],
+        5, 1, 50
+    ), 1)
+    rx_cost_risk = round(rand_gauss(
+        {1: 5, 2: 25, 3: 18, 4: 28, 5: 10, 6: 20}[cluster_id],
+        5, 1, 50
+    ), 1)
+    demo_medrx_risk = round(rand_gauss(
+        {1: 10, 2: 25, 3: 35, 4: 60, 5: 15, 6: 45}[cluster_id],
+        10, 1, 100
+    ), 1)
+
+    # -- Financial --
+    cost_mult = {1: 1, 2: 1, 3: 8, 4: 8, 5: 1, 6: 3}[cluster_id]
+    base_ip = rand_gauss(5000 * cost_mult, 2000 * cost_mult, 0, 200000)
+    base_op = rand_gauss(3000 * cost_mult, 1500 * cost_mult, 500, 100000)
+    base_phys = rand_gauss(2000 * cost_mult, 800 * cost_mult, 200, 50000)
+    base_rx = rand_gauss(3000 * cost_mult, 1200 * cost_mult, 200, 80000)
+
+    ip_allowed = round(base_ip * county["risk_mult"], 2)
+    op_allowed = round(base_op * county["risk_mult"], 2)
+    phys_allowed = round(base_phys * county["risk_mult"], 2)
+    rx_allowed = round(base_rx * county["risk_mult"], 2)
+    total_allowed = round(ip_allowed + op_allowed + phys_allowed + rx_allowed, 2)
+    pmpy = round(total_allowed, 2)
+
+    # final_target_measure: 1 if (ER>=1 and PCP==0) or ER>=3
+    if (cnt_er >= 1 and cnt_pcp == 0) or cnt_er >= 3:
+        final_target = 1
     else:
-        dialysis_provider = None
+        final_target = 0
+
+    # Cardiometabolic risk score (0-1): weighted composite of clinical signals
+    # Weights reflect clinical importance for cardiometabolic outcomes
+    age_norm = clamp((age - 18) / (95 - 18), 0, 1)
+    severity_norm = clamp((avg_severity - 1) / 4, 0, 1)
+    cci_norm = clamp(charleston_cci / 9, 0, 1)
+    frailty_norm = clamp(frailty_index / 0.4, 0, 1)
+    dx_burden = clamp((diabetes_flag + hyper_flag + heart_flag + stroke_flag
+                        + kidney_flag + esrd_flag + cardio_circul_flag) / 7, 0, 1)
+    util_norm = clamp((cnt_er + cnt_readmit_30 * 3) / 10, 0, 1)
+    medrx_norm = clamp(demo_medrx_risk / 80, 0, 1)
+
+    risk_score_raw = (
+        0.10 * age_norm
+        + 0.20 * severity_norm
+        + 0.15 * cci_norm
+        + 0.10 * frailty_norm
+        + 0.20 * dx_burden
+        + 0.10 * util_norm
+        + 0.15 * medrx_norm
+    )
+    # Add small noise and clamp
+    risk_score = round(clamp(risk_score_raw + random.gauss(0, 0.03), 0, 1), 3)
 
     return {
-        "id": generate_member_id(),
-        "lob": lob,
-        "cluster": cluster_id,
-        "county_fips": county["fips"],
-        "county_name": county["name"],
-        "region": county["region"],
-        "age": age,
+        "member_id": f"MBR{100000 + member_id}",
+        "cluster_label": cluster_id,
         "gender": gender,
-        "hcc_score": hcc_score,
-        "a1c": a1c,
-        "egfr": egfr,
-        "bp_systolic": bp_systolic,
-        "bp_diastolic": bp_diastolic,
-        "bmi": bmi,
-        "ldl": ldl,
+        "age_at_pred": age,
+        "state": state,
+        "total_months": total_months,
+        "county": county["name"],
+        "region": county["region"],
+        "lob": lob,
+        # SDOH
+        "acs_pct_unemploy_zc": acs_pct_unemploy,
+        "acs_pct_hh_no_fd_stmp_blw_pov_zc": acs_pct_no_fd_stmp,
+        "acs_pct_lt_hs_zc": acs_pct_lt_hs,
+        "hifld_dist_uc_zp": hifld_dist_uc,
+        "pos_dist_ed_zp": pos_dist_ed,
+        "acs_pct_hh_no_internet_zc": acs_pct_no_internet,
+        "acs_pct_work_no_car_zc": acs_pct_no_car,
+        "hrsn_flag": hrsn_flag,
+        # Clinical Utilization
+        "cnt_er_visits": cnt_er,
+        "cnt_pcp_visits": cnt_pcp,
+        "cnt_readmit_30": cnt_readmit_30,
+        "cardiology_visit_cnt": cardiology_cnt,
+        "endocrinology_visit_cnt": endocrinology_cnt,
+        "nephrology_visit_cnt": nephrology_cnt,
+        "neurology_visit_cnt": neurology_cnt,
+        "preventive_administrative_visit_cnt": preventive_cnt,
+        # Diagnostics
+        "DIABETES_FLAG": diabetes_flag,
+        "HYPER_FLAG": hyper_flag,
+        "HEART_FLAG": heart_flag,
+        "STROKE_FLAG": stroke_flag,
+        "KIDNEY_FLAG": kidney_flag,
+        "esrd_flag": esrd_flag,
+        "CARDIO_CIRCUL_FLAG": cardio_circul_flag,
+        "avg_severity_level": avg_severity,
+        # Risk
+        "frailty_index": frailty_index,
+        "charleston_comorbidity_score_cci": charleston_cci,
+        "lab_cost_risk": lab_cost_risk,
+        "rx_cost_risk": rx_cost_risk,
+        "demo_medrx_100k_risk": demo_medrx_risk,
+        "cardio_metabolic_risk_score": risk_score,
+        # Financial
+        "ip_allowed_amt": ip_allowed,
+        "op_allowed_amt": op_allowed,
+        "phys_allowed_amt": phys_allowed,
+        "rx_allowed_amt": rx_allowed,
+        "total_allowed_amt": total_allowed,
         "pmpy": pmpy,
-        "pmpm": int(pmpy / 12),
-        "er_visits_ytd": er_visits,
-        "hospitalizations_ytd": hospitalizations,
-        "specialist_visits_ytd": specialist_visits,
-        "trajectory": trajectory,
-        "conditions": cluster["conditions"],
-        "sdoh_score": sdoh_score,
-        "food_insecurity": food_insecurity,
-        "transportation_barrier": transportation_barrier,
-        "engagement": engagement,
-        "last_pcp_visit_months": last_pcp_months,
-        "dialysis_provider": dialysis_provider,
-        "is_complex_frail": is_complex_frail,
-        "is_non_outreach": is_non_outreach
+        # Outcomes
+        "final_target_measure": final_target,
     }
 
 
-def generate_members():
-    """Generate all 4,000 members with planted data points."""
-    members = []
-
-    # Weight counties by population for distribution
-    total_pop = sum(c["population"] for c in ARKANSAS_COUNTIES)
-    county_weights = {c["fips"]: c["population"] / total_pop for c in ARKANSAS_COUNTIES}
-    county_by_fips = {c["fips"]: c for c in ARKANSAS_COUNTIES}
-
-    # Delta counties for ESRD planting
-    delta_counties = [c for c in ARKANSAS_COUNTIES if c["region"] == "Delta"]
-
-    for lob, config in LOB_CONFIG.items():
-        count = config["count"]
-        cluster_weights = config["cluster_weights"]
-
-        for i in range(count):
-            cluster_id = weighted_choice(cluster_weights)
-            county_fips = weighted_choice(county_weights)
-            county = county_by_fips[county_fips]
-
-            # Planted DaVita insight: 8 DSNP Cluster 1 members
-            is_davita = False
-            if lob == "DSNP" and cluster_id == 1 and len([m for m in members if m.get("dialysis_provider") == "DaVita" and m["lob"] == "DSNP"]) < 8:
-                is_davita = random.random() < 0.15
-
-            # Planted Medicare Cluster 1 sub-clusters
-            is_complex_frail = False
-            is_non_outreach = False
-            if lob == "Medicare" and cluster_id == 1:
-                medicare_c1 = [m for m in members if m["lob"] == "Medicare" and m["cluster"] == 1]
-                complex_frail_count = len([m for m in medicare_c1 if m.get("is_complex_frail")])
-                non_outreach_count = len([m for m in medicare_c1 if m.get("is_non_outreach")])
-
-                if complex_frail_count < 85 and random.random() < 0.7:
-                    is_complex_frail = True
-                elif non_outreach_count < 30 and random.random() < 0.25:
-                    is_non_outreach = True
-
-            # Bias Delta region for ESRD/high-risk
-            if cluster_id == 1 and random.random() < 0.4:
-                county = random.choice(delta_counties)
-
-            member = generate_member(lob, cluster_id, county, is_davita, is_complex_frail, is_non_outreach)
-            members.append(member)
-
-    return members
+def assign_clusters(n):
+    """Assign cluster IDs to n members based on target percentages."""
+    assignments = []
+    for cid, cdef in CLUSTERS.items():
+        count = round(n * cdef["count_pct"])
+        assignments.extend([cid] * count)
+    # Fill remainder
+    while len(assignments) < n:
+        assignments.append(random.choice(list(CLUSTERS.keys())))
+    random.shuffle(assignments)
+    return assignments[:n]
 
 
-def generate_county_data():
-    """Generate county-level aggregations."""
-    counties = []
+def compute_tsne(members):
+    """Simple deterministic 2D projection for visualization.
+    Uses a lightweight approach: PCA-like projection on key numeric features
+    with cluster-based offsets to ensure separation, plus jitter.
+    No sklearn dependency needed.
+    """
+    # Features to use for projection
+    feature_keys = [
+        "age_at_pred", "cnt_er_visits", "cnt_pcp_visits",
+        "cardiology_visit_cnt", "endocrinology_visit_cnt", "nephrology_visit_cnt",
+        "frailty_index", "charleston_comorbidity_score_cci",
+        "avg_severity_level", "hifld_dist_uc_zp", "total_allowed_amt",
+        "DIABETES_FLAG", "HEART_FLAG", "KIDNEY_FLAG", "esrd_flag",
+    ]
 
-    for county in ARKANSAS_COUNTIES:
-        # Health indicators
-        esrd_rate = round(random.uniform(0.8, 2.5) * county["risk_mult"], 2)
-        diabetes_rate = round(random.uniform(10, 18) * county["risk_mult"], 1)
-        obesity_rate = round(random.uniform(28, 42) * county["risk_mult"], 1)
+    # Normalize features
+    mins = {}
+    maxs = {}
+    for k in feature_keys:
+        vals = [m[k] for m in members]
+        mins[k] = min(vals)
+        maxs[k] = max(vals) if max(vals) != min(vals) else min(vals) + 1
 
-        # SDOH
-        poverty_rate = round(random.uniform(12, 28) * county["risk_mult"], 1)
-        uninsured_rate = round(random.uniform(8, 18) * county["risk_mult"], 1)
-        food_desert_pct = round(random.uniform(5, 35) * county["risk_mult"], 1)
+    normalized = []
+    for m in members:
+        row = [(m[k] - mins[k]) / (maxs[k] - mins[k]) for k in feature_keys]
+        normalized.append(row)
 
-        # Access
-        pcp_per_10k = round(random.uniform(3, 12) / county["risk_mult"], 1)
-        specialist_per_10k = round(random.uniform(1, 8) / county["risk_mult"], 1)
-        hospital_distance = round(random.uniform(5, 45) * county["risk_mult"], 1)
+    # Two projection vectors (hand-picked to separate clusters well)
+    w1 = [0.1, 0.2, -0.15, 0.25, 0.15, 0.2, 0.3, 0.25, 0.2, 0.3, 0.1, 0.15, 0.2, 0.25, 0.2]
+    w2 = [0.3, -0.1, 0.2, 0.1, -0.2, 0.15, 0.25, 0.2, -0.15, -0.2, 0.2, -0.1, 0.15, 0.1, -0.15]
 
-        # Cost
-        avg_pmpy = int(random.uniform(18000, 45000) * county["risk_mult"])
+    # Cluster center offsets for clear separation
+    cluster_offsets = {
+        1: (-3, 2),
+        2: (1, 3),
+        3: (4, 1),
+        4: (3, -3),
+        5: (-4, -2),
+        6: (0, -4),
+    }
 
-        counties.append({
-            "fips": county["fips"],
-            "name": county["name"],
-            "region": county["region"],
-            "population": county["population"],
-            "risk_multiplier": county["risk_mult"],
-            "esrd_rate_per_1000": esrd_rate,
-            "diabetes_prevalence": diabetes_rate,
-            "obesity_rate": obesity_rate,
-            "poverty_rate": poverty_rate,
-            "uninsured_rate": uninsured_rate,
-            "food_desert_pct": food_desert_pct,
-            "pcp_per_10k": pcp_per_10k,
-            "specialist_per_10k": specialist_per_10k,
-            "hospital_distance_miles": hospital_distance,
-            "avg_pmpy": avg_pmpy
-        })
+    random.seed(123)  # Reproducible jitter
+    for i, m in enumerate(members):
+        proj_x = sum(normalized[i][j] * w1[j] for j in range(len(feature_keys)))
+        proj_y = sum(normalized[i][j] * w2[j] for j in range(len(feature_keys)))
+        cx, cy = cluster_offsets[m["cluster_label"]]
+        jitter_x = random.gauss(0, 0.6)
+        jitter_y = random.gauss(0, 0.6)
+        m["tsne_x"] = round(proj_x + cx + jitter_x, 3)
+        m["tsne_y"] = round(proj_y + cy + jitter_y, 3)
 
-    return counties
-
-
-def generate_scenarios():
-    """Generate pre-computed scenario results."""
-    scenarios = []
-
-    enrollment_levels = [0.3, 0.5, 0.7, 0.85, 1.0]
-    engagement_levels = [0.3, 0.5, 0.6, 0.75, 0.9]
-
-    for cluster_id in [1, 2, 3]:
-        cluster = CLUSTERS[cluster_id]
-        base_pmpy = (cluster["pmpy_range"][0] + cluster["pmpy_range"][1]) / 2
-
-        for intervention in INTERVENTIONS:
-            if cluster_id not in intervention["target_clusters"]:
-                continue
-
-            for enrollment in enrollment_levels:
-                for engagement in engagement_levels:
-                    # Calculate outcomes
-                    effective_rate = enrollment * engagement
-                    cost_reduction = intervention["cost_reduction"] * effective_rate
-
-                    # Diminishing returns at high engagement
-                    if effective_rate > 0.6:
-                        cost_reduction *= (1 - (effective_rate - 0.6) * 0.3)
-
-                    savings_pmpy = int(base_pmpy * cost_reduction)
-                    intervention_cost = intervention["monthly_cost"] * 12 * enrollment
-                    net_savings = savings_pmpy - intervention_cost
-                    roi = round((net_savings / intervention_cost) * 100 if intervention_cost > 0 else 0, 1)
-
-                    # Break-even calculation
-                    monthly_savings = savings_pmpy / 12
-                    if monthly_savings > intervention["monthly_cost"]:
-                        break_even = round(intervention["monthly_cost"] / (monthly_savings - intervention["monthly_cost"] * enrollment), 1)
-                    else:
-                        break_even = 24  # Cap at 24 months
-
-                    scenarios.append({
-                        "cluster": cluster_id,
-                        "intervention_id": intervention["id"],
-                        "intervention_name": intervention["name"],
-                        "enrollment": enrollment,
-                        "engagement": engagement,
-                        "cost_reduction_pct": round(cost_reduction * 100, 1),
-                        "savings_pmpy": savings_pmpy,
-                        "intervention_cost_annual": int(intervention_cost),
-                        "net_savings_pmpy": int(net_savings),
-                        "roi_pct": roi,
-                        "break_even_months": break_even
-                    })
-
-    return scenarios
-
-
-def generate_timeline_projections():
-    """Generate 24-month projection data."""
-    projections = []
-
-    for cluster_id in [1, 2, 3]:
-        cluster = CLUSTERS[cluster_id]
-        base_cost = (cluster["pmpy_range"][0] + cluster["pmpy_range"][1]) / 2 / 12
-
-        baseline = []
-        intervention = []
-
-        for month in range(1, 25):
-            # Baseline grows with medical trend
-            trend = 1 + (0.005 * month)  # 0.5% monthly trend
-            baseline_cost = int(base_cost * trend)
-            baseline.append({"month": month, "cost": baseline_cost})
-
-            # Intervention shows gradual improvement
-            ramp_up = min(1, month / 6)  # 6-month ramp up
-            reduction = 0.15 * ramp_up
-            intervention_cost = int(base_cost * trend * (1 - reduction))
-            intervention.append({"month": month, "cost": intervention_cost})
-
-        projections.append({
-            "cluster": cluster_id,
-            "baseline": baseline,
-            "intervention": intervention,
-            "cumulative_savings": sum(b["cost"] - i["cost"] for b, i in zip(baseline, intervention))
-        })
-
-    return projections
-
-
-def to_js_file(data, var_name, filename):
-    """Write data as JavaScript const."""
-    js_content = f"const {var_name} = {json.dumps(data, indent=2)};\n"
-    with open(filename, 'w') as f:
-        f.write(js_content)
-    print(f"Generated {filename}")
+    random.seed(42)  # Reset seed
 
 
 def main():
-    print("Generating synthetic data for Optum Cardio-Metabolic Demo...")
+    print(f"Generating {N_MEMBERS} synthetic members across 6 clusters...")
 
-    # Generate all data
-    members = generate_members()
-    counties = generate_county_data()
-    scenarios = generate_scenarios()
-    projections = generate_timeline_projections()
+    cluster_ids = assign_clusters(N_MEMBERS)
+    members = []
+    for i, cid in enumerate(cluster_ids):
+        m = generate_member(i, cid)
+        members.append(m)
 
-    # Compute aggregations
-    cluster_summary = {}
-    for cluster_id, cluster in CLUSTERS.items():
-        cluster_members = [m for m in members if m["cluster"] == cluster_id]
-        cluster_summary[cluster_id] = {
-            **cluster,
-            "member_count": len(cluster_members),
-            "avg_pmpy": int(sum(m["pmpy"] for m in cluster_members) / len(cluster_members)) if cluster_members else 0,
-            "avg_hcc": round(sum(m["hcc_score"] for m in cluster_members) / len(cluster_members), 2) if cluster_members else 0,
-            "avg_age": round(sum(m["age"] for m in cluster_members) / len(cluster_members), 1) if cluster_members else 0,
-            "by_lob": {
-                lob: len([m for m in cluster_members if m["lob"] == lob])
-                for lob in LOB_CONFIG.keys()
+    # Compute t-SNE-like 2D projection
+    compute_tsne(members)
+
+    # Cluster counts
+    for cid in sorted(CLUSTERS.keys()):
+        count = sum(1 for m in members if m["cluster_label"] == cid)
+        print(f"  Cluster {cid} ({CLUSTERS[cid]['name']}): {count} members")
+
+    # Feature metadata
+    feature_metadata = {
+        "Demographics": {
+            "features": ["gender", "age_at_pred", "total_months"],
+            "descriptions": {
+                "gender": "Member gender (M/F)",
+                "age_at_pred": "Age Group",
+                "total_months": "Total months of enrollment"
+            }
+        },
+        "Social Determinants of Health (SDOH)": {
+            "features": [
+                "acs_pct_unemploy_zc", "acs_pct_hh_no_fd_stmp_blw_pov_zc", "acs_pct_lt_hs_zc",
+                "hifld_dist_uc_zp", "pos_dist_ed_zp", "acs_pct_hh_no_internet_zc",
+                "acs_pct_work_no_car_zc", "hrsn_flag"
+            ],
+            "descriptions": {
+                "acs_pct_unemploy_zc": "% Unemployed in ZIP",
+                "acs_pct_hh_no_fd_stmp_blw_pov_zc": "% Households Below Poverty (No Food Stamps)",
+                "acs_pct_lt_hs_zc": "% Less Than High School Education",
+                "hifld_dist_uc_zp": "Distance to Nearest Urgent Care (miles)",
+                "pos_dist_ed_zp": "Distance to Nearest ED (miles)",
+                "acs_pct_hh_no_internet_zc": "% Households Without Internet",
+                "acs_pct_work_no_car_zc": "% Workers Without Vehicle",
+                "hrsn_flag": "Health-Related Social Needs Flag"
+            }
+        },
+        "Clinical Utilization": {
+            "features": [
+                "cnt_er_visits", "cnt_pcp_visits", "cnt_readmit_30",
+                "cardiology_visit_cnt", "endocrinology_visit_cnt",
+                "nephrology_visit_cnt", "neurology_visit_cnt",
+                "preventive_administrative_visit_cnt"
+            ],
+            "descriptions": {
+                "cnt_er_visits": "ER Visits (YTD)",
+                "cnt_pcp_visits": "PCP Visits (YTD)",
+                "cnt_readmit_30": "30-Day Readmissions",
+                "cardiology_visit_cnt": "Cardiology Visits",
+                "endocrinology_visit_cnt": "Endocrinology Visits",
+                "nephrology_visit_cnt": "Nephrology Visits",
+                "neurology_visit_cnt": "Neurology Visits",
+                "preventive_administrative_visit_cnt": "Preventive/Admin Visits"
+            }
+        },
+        "Cardiometabolic Diagnostics": {
+            "features": [
+                "DIABETES_FLAG", "HYPER_FLAG", "HEART_FLAG", "STROKE_FLAG",
+                "KIDNEY_FLAG", "esrd_flag", "CARDIO_CIRCUL_FLAG", "avg_severity_level"
+            ],
+            "descriptions": {
+                "DIABETES_FLAG": "Diabetes Diagnosis",
+                "HYPER_FLAG": "Hypertension Diagnosis",
+                "HEART_FLAG": "Heart Disease Diagnosis",
+                "STROKE_FLAG": "Stroke History",
+                "KIDNEY_FLAG": "Kidney Disease Diagnosis",
+                "esrd_flag": "End-Stage Renal Disease",
+                "CARDIO_CIRCUL_FLAG": "Cardiovascular/Circulatory Disease",
+                "avg_severity_level": "Average Severity Level"
+            }
+        },
+        "Risk & Vulnerability": {
+            "features": [
+                "frailty_index", "charleston_comorbidity_score_cci",
+                "lab_cost_risk", "rx_cost_risk", "demo_medrx_100k_risk",
+                "cardio_metabolic_risk_score"
+            ],
+            "descriptions": {
+                "frailty_index": "Frailty Index",
+                "charleston_comorbidity_score_cci": "Charlson Comorbidity Index",
+                "lab_cost_risk": "Lab Cost Risk Score",
+                "rx_cost_risk": "Pharmacy Cost Risk Score",
+                "demo_medrx_100k_risk": "Demographic Medical/Rx Risk (per 100K)",
+                "cardio_metabolic_risk_score": "Cardiometabolic Risk Score (0-1)"
+            }
+        },
+        "Financial": {
+            "features": [
+                "ip_allowed_amt", "op_allowed_amt", "phys_allowed_amt",
+                "rx_allowed_amt", "total_allowed_amt", "pmpy"
+            ],
+            "descriptions": {
+                "ip_allowed_amt": "Inpatient Allowed Amount ($)",
+                "op_allowed_amt": "Outpatient Allowed Amount ($)",
+                "phys_allowed_amt": "Physician Allowed Amount ($)",
+                "rx_allowed_amt": "Pharmacy Allowed Amount ($)",
+                "total_allowed_amt": "Total Allowed Amount ($)",
+                "pmpy": "Per Member Per Year Cost ($)"
+            }
+        },
+        "Outcomes": {
+            "features": ["final_target_measure", "cluster_label"],
+            "descriptions": {
+                "final_target_measure": "High-Risk Utilization Flag (ER-only or 3+ ER visits)",
+                "cluster_label": "AI-Assigned Cluster"
             }
         }
-
-    # DaVita insight data
-    davita_members = [m for m in members if m["dialysis_provider"] == "DaVita" and m["cluster"] == 1 and m["lob"] == "DSNP"]
-    non_davita_members = [m for m in members if m["dialysis_provider"] != "DaVita" and m["cluster"] == 1 and m["lob"] == "DSNP"]
-
-    davita_insight = {
-        "davita_count": len(davita_members),
-        "davita_avg_pmpy": int(sum(m["pmpy"] for m in davita_members) / len(davita_members)) if davita_members else 0,
-        "non_davita_count": len(non_davita_members),
-        "non_davita_avg_pmpy": int(sum(m["pmpy"] for m in non_davita_members) / len(non_davita_members)) if non_davita_members else 0,
-        "gap_pct": round(((sum(m["pmpy"] for m in davita_members) / len(davita_members)) /
-                         (sum(m["pmpy"] for m in non_davita_members) / len(non_davita_members)) - 1) * 100, 1) if davita_members and non_davita_members else 0
     }
 
-    # Regional summary
-    regional_summary = {}
-    for region in ["Delta", "Northwest", "Little Rock", "Southwest", "River Valley"]:
-        region_members = [m for m in members if m["region"] == region]
-        regional_summary[region] = {
-            "member_count": len(region_members),
-            "avg_pmpy": int(sum(m["pmpy"] for m in region_members) / len(region_members)) if region_members else 0,
-            "cluster_distribution": {
-                cluster_id: len([m for m in region_members if m["cluster"] == cluster_id])
-                for cluster_id in CLUSTERS.keys()
-            },
-            "esrd_rate": round(len([m for m in region_members if m["cluster"] == 1]) / len(region_members) * 100, 1) if region_members else 0
-        }
+    # Write outputs
+    with open("src/data/ar_cardiometabolic_demo_data.json", "w") as f:
+        json.dump(members, f, indent=2)
+    print(f"Wrote src/data/ar_cardiometabolic_demo_data.json ({len(members)} rows)")
 
-    # Write JS files
-    output_dir = "js/data/"
-    to_js_file(members, "MEMBERS", f"{output_dir}members.js")
-    to_js_file(dict(cluster_summary), "CLUSTERS", f"{output_dir}clusters.js")
-    to_js_file(counties, "COUNTIES", f"{output_dir}counties.js")
-    to_js_file(scenarios, "SCENARIOS", f"{output_dir}scenarios.js")
-    to_js_file(projections, "PROJECTIONS", f"{output_dir}projections.js")
-    to_js_file(INTERVENTIONS, "INTERVENTIONS", f"{output_dir}interventions.js")
-    to_js_file(davita_insight, "DAVITA_INSIGHT", f"{output_dir}davita.js")
-    to_js_file(regional_summary, "REGIONAL_SUMMARY", f"{output_dir}regions.js")
+    with open("src/data/ui_feature_metadata.json", "w") as f:
+        json.dump(feature_metadata, f, indent=2)
+    print("Wrote src/data/ui_feature_metadata.json (7 groups)")
 
-    # Print summary
-    print(f"\nGenerated {len(members)} members:")
-    for lob, config in LOB_CONFIG.items():
-        lob_members = [m for m in members if m["lob"] == lob]
-        print(f"  {lob}: {len(lob_members)}")
-
-    print(f"\nCluster distribution:")
-    for cluster_id, summary in cluster_summary.items():
-        print(f"  Cluster {cluster_id} ({summary['name']}): {summary['member_count']} members, ${summary['avg_pmpy']:,} avg PMPY")
-
-    print(f"\nDaVita insight:")
-    print(f"  DaVita DSNP Cluster 1: {davita_insight['davita_count']} members @ ${davita_insight['davita_avg_pmpy']:,} avg")
-    print(f"  Non-DaVita DSNP Cluster 1: {davita_insight['non_davita_count']} members @ ${davita_insight['non_davita_avg_pmpy']:,} avg")
-    print(f"  Gap: {davita_insight['gap_pct']}%")
-
-    print(f"\nGenerated {len(scenarios)} scenario combinations")
-    print(f"Generated {len(counties)} county records")
+    # Summary stats
+    total_cost = sum(m["pmpy"] for m in members)
+    avg_cost = total_cost / len(members)
+    avg_age = sum(m["age_at_pred"] for m in members) / len(members)
+    esrd_count = sum(1 for m in members if m["esrd_flag"] == 1)
+    print(f"\nPopulation summary:")
+    print(f"  Avg age: {avg_age:.1f}")
+    print(f"  Avg PMPY: ${avg_cost:,.0f}")
+    print(f"  ESRD members: {esrd_count}")
+    print(f"  Target measure flagged: {sum(1 for m in members if m['final_target_measure'] == 1)}")
 
 
 if __name__ == "__main__":
