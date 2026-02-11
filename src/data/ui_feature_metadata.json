@@ -1,0 +1,126 @@
+{
+  "Demographics": {
+    "features": [
+      "gender",
+      "age_at_pred",
+      "total_months"
+    ],
+    "descriptions": {
+      "gender": "Member gender (M/F)",
+      "age_at_pred": "Age Group",
+      "total_months": "Total months of enrollment"
+    }
+  },
+  "Social Determinants of Health (SDOH)": {
+    "features": [
+      "acs_pct_unemploy_zc",
+      "acs_pct_hh_no_fd_stmp_blw_pov_zc",
+      "acs_pct_lt_hs_zc",
+      "hifld_dist_uc_zp",
+      "pos_dist_ed_zp",
+      "acs_pct_hh_no_internet_zc",
+      "acs_pct_work_no_car_zc",
+      "hrsn_flag"
+    ],
+    "descriptions": {
+      "acs_pct_unemploy_zc": "% Unemployed in ZIP",
+      "acs_pct_hh_no_fd_stmp_blw_pov_zc": "% Households Below Poverty (No Food Stamps)",
+      "acs_pct_lt_hs_zc": "% Less Than High School Education",
+      "hifld_dist_uc_zp": "Distance to Nearest Urgent Care (miles)",
+      "pos_dist_ed_zp": "Distance to Nearest ED (miles)",
+      "acs_pct_hh_no_internet_zc": "% Households Without Internet",
+      "acs_pct_work_no_car_zc": "% Workers Without Vehicle",
+      "hrsn_flag": "Health-Related Social Needs Flag"
+    }
+  },
+  "Clinical Utilization": {
+    "features": [
+      "cnt_er_visits",
+      "cnt_pcp_visits",
+      "cnt_readmit_30",
+      "cardiology_visit_cnt",
+      "endocrinology_visit_cnt",
+      "nephrology_visit_cnt",
+      "neurology_visit_cnt",
+      "preventive_administrative_visit_cnt"
+    ],
+    "descriptions": {
+      "cnt_er_visits": "ER Visits (YTD)",
+      "cnt_pcp_visits": "PCP Visits (YTD)",
+      "cnt_readmit_30": "30-Day Readmissions",
+      "cardiology_visit_cnt": "Cardiology Visits",
+      "endocrinology_visit_cnt": "Endocrinology Visits",
+      "nephrology_visit_cnt": "Nephrology Visits",
+      "neurology_visit_cnt": "Neurology Visits",
+      "preventive_administrative_visit_cnt": "Preventive/Admin Visits"
+    }
+  },
+  "Cardiometabolic Diagnostics": {
+    "features": [
+      "DIABETES_FLAG",
+      "HYPER_FLAG",
+      "HEART_FLAG",
+      "STROKE_FLAG",
+      "KIDNEY_FLAG",
+      "esrd_flag",
+      "CARDIO_CIRCUL_FLAG",
+      "avg_severity_level"
+    ],
+    "descriptions": {
+      "DIABETES_FLAG": "Diabetes Diagnosis",
+      "HYPER_FLAG": "Hypertension Diagnosis",
+      "HEART_FLAG": "Heart Disease Diagnosis",
+      "STROKE_FLAG": "Stroke History",
+      "KIDNEY_FLAG": "Kidney Disease Diagnosis",
+      "esrd_flag": "End-Stage Renal Disease",
+      "CARDIO_CIRCUL_FLAG": "Cardiovascular/Circulatory Disease",
+      "avg_severity_level": "Average Severity Level"
+    }
+  },
+  "Risk & Vulnerability": {
+    "features": [
+      "frailty_index",
+      "charleston_comorbidity_score_cci",
+      "lab_cost_risk",
+      "rx_cost_risk",
+      "demo_medrx_100k_risk",
+      "cardio_metabolic_risk_score"
+    ],
+    "descriptions": {
+      "frailty_index": "Frailty Index",
+      "charleston_comorbidity_score_cci": "Charlson Comorbidity Index",
+      "lab_cost_risk": "Lab Cost Risk Score",
+      "rx_cost_risk": "Pharmacy Cost Risk Score",
+      "demo_medrx_100k_risk": "Demographic Medical/Rx Risk (per 100K)",
+      "cardio_metabolic_risk_score": "Cardiometabolic Risk Score (0-1)"
+    }
+  },
+  "Financial": {
+    "features": [
+      "ip_allowed_amt",
+      "op_allowed_amt",
+      "phys_allowed_amt",
+      "rx_allowed_amt",
+      "total_allowed_amt",
+      "pmpy"
+    ],
+    "descriptions": {
+      "ip_allowed_amt": "Inpatient Allowed Amount ($)",
+      "op_allowed_amt": "Outpatient Allowed Amount ($)",
+      "phys_allowed_amt": "Physician Allowed Amount ($)",
+      "rx_allowed_amt": "Pharmacy Allowed Amount ($)",
+      "total_allowed_amt": "Total Allowed Amount ($)",
+      "pmpy": "Per Member Per Year Cost ($)"
+    }
+  },
+  "Outcomes": {
+    "features": [
+      "final_target_measure",
+      "cluster_label"
+    ],
+    "descriptions": {
+      "final_target_measure": "High-Risk Utilization Flag (ER-only or 3+ ER visits)",
+      "cluster_label": "AI-Assigned Cluster"
+    }
+  }
+}
