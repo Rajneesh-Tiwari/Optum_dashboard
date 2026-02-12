@@ -1,19 +1,18 @@
 import ReactECharts from "echarts-for-react"
+import { CHART_COLORS } from "../../lib/echartsTheme"
 import {
   members,
   getFeatureValues,
   getFeatureDescription,
   isBinaryFeature,
-  CLUSTER_COLORS,
 } from "../../lib/dataUtils"
 
 interface FeatureDistributionProps {
   feature: string
+  compact?: boolean
 }
 
 // ── Bucketing definitions ────────────────────────────────────────
-// Each entry maps a feature key to an array of { label, min, max } buckets.
-// Values satisfy: min <= value < max (last bucket uses <=).
 
 interface Bucket {
   label: string
@@ -92,18 +91,18 @@ const BUCKET_DEFS: Record<string, Bucket[]> = {
     { label: "7+", min: 7, max: Infinity },
   ],
   cardio_metabolic_risk_score: [
-    { label: "Low (0-0.2)", min: 0, max: 0.2 },
-    { label: "Mild (0.2-0.35)", min: 0.2, max: 0.35 },
-    { label: "Moderate (0.35-0.5)", min: 0.35, max: 0.5 },
-    { label: "High (0.5-0.7)", min: 0.5, max: 0.7 },
-    { label: "Critical (0.7+)", min: 0.7, max: Infinity },
+    { label: "Low", min: 0, max: 0.2 },
+    { label: "Mild", min: 0.2, max: 0.35 },
+    { label: "Moderate", min: 0.35, max: 0.5 },
+    { label: "High", min: 0.5, max: 0.7 },
+    { label: "Critical", min: 0.7, max: Infinity },
   ],
   frailty_index: [
-    { label: "Robust (0-0.05)", min: 0, max: 0.05 },
-    { label: "Pre-frail (0.05-0.15)", min: 0.05, max: 0.15 },
-    { label: "Mild (0.15-0.25)", min: 0.15, max: 0.25 },
-    { label: "Moderate (0.25-0.35)", min: 0.25, max: 0.35 },
-    { label: "Severe (0.35+)", min: 0.35, max: Infinity },
+    { label: "Robust", min: 0, max: 0.05 },
+    { label: "Pre-frail", min: 0.05, max: 0.15 },
+    { label: "Mild", min: 0.15, max: 0.25 },
+    { label: "Moderate", min: 0.25, max: 0.35 },
+    { label: "Severe", min: 0.35, max: Infinity },
   ],
 }
 
@@ -114,43 +113,57 @@ function assignBucket(value: number, buckets: Bucket[]): number {
   return buckets.length - 1
 }
 
-export function FeatureDistribution({ feature }: FeatureDistributionProps) {
+export function FeatureDistribution({ feature, compact = false }: FeatureDistributionProps) {
   const desc = getFeatureDescription(feature)
+  const h = compact ? 200 : 300
+  const titleSize = compact ? 11 : 13
+  const labelSize = compact ? 9 : 11
+  const grid = compact
+    ? { left: 40, right: 12, bottom: 30, top: 40 }
+    : { left: 50, right: 20, bottom: 40, top: 50 }
 
   // Check if feature values are numeric
   const rawVals = members.map((m) => (m as Record<string, unknown>)[feature])
   const isNumeric = rawVals.every((v) => typeof v === "number")
 
   if (!isNumeric) {
-    // Categorical: count occurrences
+    // Categorical: pie chart
     const counts: Record<string, number> = {}
     rawVals.forEach((v) => {
       const key = String(v)
       counts[key] = (counts[key] || 0) + 1
     })
-    const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 20)
+    const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 10)
+    const pieColors = ["#60A5FA", "#34D399", "#A78BFA", "#F472B6", "#38BDF8", "#FBBF24", "#FF612B", "#EC4899", "#6366F1", "#14B8A6"]
 
     return (
       <ReactECharts
         option={{
-          title: { text: desc, left: "center", textStyle: { color: "#f1f5f9", fontSize: 13 } },
-          tooltip: { trigger: "axis" },
-          grid: { left: 50, right: 20, bottom: 40, top: 50 },
-          xAxis: {
-            type: "category",
-            data: entries.map(([k]) => k),
-            axisLabel: { color: "#94a3b8", rotate: 30, fontSize: 10 },
-            axisLine: { lineStyle: { color: "#334155" } },
-          },
-          yAxis: {
-            type: "value",
-            axisLabel: { color: "#94a3b8" },
-            splitLine: { lineStyle: { color: "#1e293b" } },
-          },
-          series: [{ type: "bar", data: entries.map(([, v]) => v), itemStyle: { color: "#FF612B" } }],
+          title: { text: desc, left: "center", textStyle: { color: CHART_COLORS.titleText, fontSize: titleSize } },
+          tooltip: { trigger: "item", formatter: "{b}: {c} members ({d}%)" },
+          series: [
+            {
+              type: "pie",
+              radius: compact ? ["30%", "60%"] : ["35%", "65%"],
+              center: ["50%", "55%"],
+              data: entries.map(([k, v], i) => ({
+                name: k,
+                value: v,
+                itemStyle: { color: pieColors[i % pieColors.length] },
+              })),
+              label: {
+                color: CHART_COLORS.axisLabel,
+                fontSize: compact ? 9 : 11,
+                formatter: compact ? "{d}%" : "{b}: {d}%",
+              },
+              emphasis: {
+                itemStyle: { shadowBlur: 10, shadowColor: "rgba(0,0,0,0.15)" },
+              },
+            },
+          ],
         }}
-        style={{ height: 300 }}
-        theme="optumDark"
+        style={{ height: h }}
+        theme="optumLight"
       />
     )
   }
@@ -158,59 +171,77 @@ export function FeatureDistribution({ feature }: FeatureDistributionProps) {
   const binary = isBinaryFeature(feature)
 
   if (binary) {
-    const clusters = [1, 2, 3, 4, 5, 6]
-    const clusterTotals = clusters.map(
-      (c) => members.filter((m) => m.cluster_label === c).length
-    )
-    const flaggedPct = clusters.map(
-      (c, i) => {
-        const flagged = members.filter(
-          (m) => m.cluster_label === c && (m as Record<string, unknown>)[feature] === 1
-        ).length
-        return clusterTotals[i] > 0 ? Math.round((flagged / clusterTotals[i]) * 100) : 0
-      }
-    )
+    const total = members.length
+    const flagged = members.filter((m) => (m as Record<string, unknown>)[feature] === 1).length
+    const pct = Math.round((flagged / total) * 100)
+    const notFlagged = total - flagged
+    const notPct = 100 - pct
 
     return (
       <ReactECharts
         option={{
-          title: { text: desc, left: "center", textStyle: { color: "#f1f5f9", fontSize: 13 } },
+          title: { text: desc, left: "center", textStyle: { color: CHART_COLORS.titleText, fontSize: titleSize } },
           tooltip: {
             trigger: "axis",
-            formatter: (params: Array<{ name: string; value: number; dataIndex: number }>) => {
-              const p = params[0]
-              const total = clusterTotals[p.dataIndex]
-              const count = Math.round((p.value / 100) * total)
-              return `${p.name}: <b>${p.value}%</b> (${count}/${total} members)`
+            formatter: (params: Array<{ seriesName: string; value: number }>) => {
+              return params.map((p) => `${p.seriesName}: <b>${p.value}</b> members`).join("<br/>")
             },
           },
-          grid: { left: 50, right: 20, bottom: 40, top: 50 },
+          grid: compact
+            ? { left: 12, right: 12, bottom: 20, top: 50 }
+            : { left: 20, right: 20, bottom: 30, top: 55 },
           xAxis: {
-            type: "category",
-            data: clusters.map((c) => `C${c}`),
-            axisLabel: { color: "#94a3b8" },
-            axisLine: { lineStyle: { color: "#334155" } },
+            type: "value",
+            max: total,
+            show: false,
           },
           yAxis: {
-            type: "value",
-            name: "% Flagged",
-            max: 100,
-            axisLabel: { color: "#94a3b8", formatter: "{value}%" },
-            splitLine: { lineStyle: { color: "#1e293b" } },
+            type: "category",
+            data: [""],
+            show: false,
           },
           series: [
             {
+              name: "Flagged",
               type: "bar",
-              data: flaggedPct.map((v, i) => ({
-                value: v,
-                itemStyle: { color: CLUSTER_COLORS[clusters[i]] },
-              })),
-              barWidth: "50%",
+              stack: "total",
+              data: [flagged],
+              barWidth: compact ? 28 : 36,
+              itemStyle: {
+                color: "#60A5FA",
+                borderRadius: [6, 0, 0, 6],
+              },
+              label: {
+                show: true,
+                position: "inside",
+                formatter: `${pct}%  (${flagged})`,
+                color: "#fff",
+                fontSize: compact ? 10 : 12,
+                fontWeight: "bold",
+              },
+            },
+            {
+              name: "Not Flagged",
+              type: "bar",
+              stack: "total",
+              data: [notFlagged],
+              barWidth: compact ? 28 : 36,
+              itemStyle: {
+                color: "#E5E7EB",
+                borderRadius: [0, 6, 6, 0],
+              },
+              label: {
+                show: true,
+                position: "inside",
+                formatter: `${notPct}%`,
+                color: "#9CA3AF",
+                fontSize: compact ? 10 : 12,
+              },
             },
           ],
         }}
-        style={{ height: 300 }}
-        theme="optumDark"
+        style={{ height: h }}
+        theme="optumLight"
       />
     )
   }
@@ -220,26 +251,16 @@ export function FeatureDistribution({ feature }: FeatureDistributionProps) {
   if (bucketDef) {
     const values = getFeatureValues(feature)
     const bucketCounts = Array(bucketDef.length).fill(0) as number[]
-    const bucketClusterColors: string[][] = Array.from({ length: bucketDef.length }, () => [])
 
-    values.forEach((v, i) => {
+    values.forEach((v) => {
       const idx = assignBucket(v, bucketDef)
       bucketCounts[idx]++
-      bucketClusterColors[idx].push(CLUSTER_COLORS[members[i].cluster_label])
-    })
-
-    // Dominant cluster color per bucket
-    const barColors = bucketClusterColors.map((colors) => {
-      if (colors.length === 0) return "#334155"
-      const counts: Record<string, number> = {}
-      colors.forEach((c) => (counts[c] = (counts[c] || 0) + 1))
-      return Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0]
     })
 
     return (
       <ReactECharts
         option={{
-          title: { text: desc, left: "center", textStyle: { color: "#f1f5f9", fontSize: 13 } },
+          title: { text: desc, left: "center", textStyle: { color: CHART_COLORS.titleText, fontSize: titleSize } },
           tooltip: {
             trigger: "axis",
             formatter: (params: Array<{ name: string; value: number }>) => {
@@ -247,29 +268,44 @@ export function FeatureDistribution({ feature }: FeatureDistributionProps) {
               return `${p.name}: <b>${p.value}</b> members`
             },
           },
-          grid: { left: 50, right: 20, bottom: 40, top: 50 },
+          grid,
           xAxis: {
             type: "category",
             data: bucketDef.map((b) => b.label),
-            axisLabel: { color: "#94a3b8", fontSize: 11 },
-            axisLine: { lineStyle: { color: "#334155" } },
+            axisLabel: { color: CHART_COLORS.axisLabel, fontSize: labelSize },
+            axisLine: { lineStyle: { color: CHART_COLORS.axisLine } },
+            boundaryGap: false,
           },
           yAxis: {
             type: "value",
-            name: "Members",
-            axisLabel: { color: "#94a3b8" },
-            splitLine: { lineStyle: { color: "#1e293b" } },
+            name: compact ? "" : "Members",
+            axisLabel: { color: CHART_COLORS.axisLabel, fontSize: labelSize },
+            splitLine: { show: false },
           },
           series: [
             {
-              type: "bar",
-              data: bucketCounts.map((v, i) => ({ value: v, itemStyle: { color: barColors[i] } })),
-              barWidth: "60%",
+              type: "line",
+              smooth: true,
+              symbol: "circle",
+              symbolSize: compact ? 5 : 8,
+              data: bucketCounts,
+              itemStyle: { color: "#60A5FA" },
+              lineStyle: { color: "#60A5FA", width: 2 },
+              areaStyle: {
+                color: {
+                  type: "linear",
+                  x: 0, y: 0, x2: 0, y2: 1,
+                  colorStops: [
+                    { offset: 0, color: "rgba(96, 165, 250, 0.3)" },
+                    { offset: 1, color: "rgba(96, 165, 250, 0.02)" },
+                  ],
+                },
+              },
             },
           ],
         }}
-        style={{ height: 300 }}
-        theme="optumDark"
+        style={{ height: h }}
+        theme="optumLight"
       />
     )
   }
@@ -278,16 +314,14 @@ export function FeatureDistribution({ feature }: FeatureDistributionProps) {
   const values = getFeatureValues(feature)
   const min = Math.min(...values)
   const max = Math.max(...values)
-  const bins = 20
+  const bins = compact ? 12 : 20
   const step = (max - min) / bins || 1
   const buckets = Array(bins).fill(0) as number[]
-  const colorBuckets: string[][] = Array.from({ length: bins }, () => [])
 
-  values.forEach((v, i) => {
+  values.forEach((v) => {
     let idx = Math.floor((v - min) / step)
     if (idx >= bins) idx = bins - 1
     buckets[idx]++
-    colorBuckets[idx].push(CLUSTER_COLORS[members[i].cluster_label])
   })
 
   const labels = Array.from({ length: bins }, (_, i) => {
@@ -295,41 +329,55 @@ export function FeatureDistribution({ feature }: FeatureDistributionProps) {
     return val >= 1000 ? `${(val / 1000).toFixed(0)}K` : val.toFixed(1)
   })
 
-  const barColors = colorBuckets.map((colors) => {
-    if (colors.length === 0) return "#334155"
-    const counts: Record<string, number> = {}
-    colors.forEach((c) => (counts[c] = (counts[c] || 0) + 1))
-    return Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0]
-  })
-
   return (
     <ReactECharts
       option={{
-        title: { text: desc, left: "center", textStyle: { color: "#f1f5f9", fontSize: 13 } },
-        tooltip: { trigger: "axis" },
-        grid: { left: 50, right: 20, bottom: 40, top: 50 },
+        title: { text: desc, left: "center", textStyle: { color: CHART_COLORS.titleText, fontSize: titleSize } },
+        tooltip: {
+          trigger: "axis",
+          formatter: (params: Array<{ name: string; value: number }>) => {
+            const p = params[0]
+            return `${p.name}: <b>${p.value}</b> members`
+          },
+        },
+        grid,
         xAxis: {
           type: "category",
           data: labels,
-          axisLabel: { color: "#94a3b8", rotate: 30, fontSize: 10 },
-          axisLine: { lineStyle: { color: "#334155" } },
+          axisLabel: { color: CHART_COLORS.axisLabel, rotate: compact ? 0 : 30, fontSize: labelSize, interval: compact ? "auto" : 0 },
+          axisLine: { lineStyle: { color: CHART_COLORS.axisLine } },
+          boundaryGap: false,
         },
         yAxis: {
           type: "value",
-          name: "Count",
-          axisLabel: { color: "#94a3b8" },
-          splitLine: { lineStyle: { color: "#1e293b" } },
+          name: compact ? "" : "Members",
+          axisLabel: { color: CHART_COLORS.axisLabel, fontSize: labelSize },
+          splitLine: { show: false },
         },
         series: [
           {
-            type: "bar",
-            data: buckets.map((v, i) => ({ value: v, itemStyle: { color: barColors[i] } })),
-            barWidth: "80%",
+            type: "line",
+            smooth: true,
+            symbol: "circle",
+            symbolSize: compact ? 4 : 6,
+            data: buckets,
+            itemStyle: { color: "#34D399" },
+            lineStyle: { color: "#34D399", width: 2 },
+            areaStyle: {
+              color: {
+                type: "linear",
+                x: 0, y: 0, x2: 0, y2: 1,
+                colorStops: [
+                  { offset: 0, color: "rgba(52, 211, 153, 0.3)" },
+                  { offset: 1, color: "rgba(52, 211, 153, 0.02)" },
+                ],
+              },
+            },
           },
         ],
       }}
-      style={{ height: 300 }}
-      theme="optumDark"
+      style={{ height: h }}
+      theme="optumLight"
     />
   )
 }

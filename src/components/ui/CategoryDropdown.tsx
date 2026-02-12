@@ -12,7 +12,7 @@ export function CategoryDropdown({ value, onChange }: CategoryDropdownProps) {
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-optum cursor-pointer"
+      className="bg-white border border-gray-200 text-gray-700 text-sm rounded-lg px-3 py-2 cursor-pointer"
     >
       {groups.map((g) => (
         <option key={g} value={g}>

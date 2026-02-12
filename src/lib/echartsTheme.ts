@@ -1,43 +1,56 @@
 import * as echarts from "echarts"
 
-const optumDark = {
+// Shared light-mode chart colors for use in chart components
+export const CHART_COLORS = {
+  axisLabel: "#64748B",
+  axisLine: "#CBD5E1",
+  splitLine: "#E2E8F0",
+  titleText: "#0F172A",
+  tooltipBg: "rgba(255, 255, 255, 0.96)",
+  tooltipBorder: "#E2E8F0",
+  tooltipText: "#0F172A",
+  legendText: "#64748B",
+  legendPageIcon: "#64748B",
+}
+
+const optumLight = {
   color: [
+    "#60A5FA",
+    "#34D399",
+    "#A78BFA",
+    "#F472B6",
+    "#38BDF8",
+    "#FBBF24",
     "#FF612B",
-    "#EF4444",
-    "#F97316",
-    "#EAB308",
-    "#22C55E",
-    "#3B82F6",
-    "#8B5CF6",
     "#EC4899",
   ],
   backgroundColor: "transparent",
   textStyle: {
-    color: "#94a3b8",
+    color: CHART_COLORS.axisLabel,
   },
   title: {
-    textStyle: { color: "#f1f5f9", fontSize: 14, fontWeight: 600 },
-    subtextStyle: { color: "#94a3b8" },
+    textStyle: { color: CHART_COLORS.titleText, fontSize: 14, fontWeight: 600 },
+    subtextStyle: { color: CHART_COLORS.axisLabel },
   },
   legend: {
-    textStyle: { color: "#94a3b8" },
+    textStyle: { color: CHART_COLORS.legendText },
   },
   tooltip: {
-    backgroundColor: "rgba(15, 23, 42, 0.95)",
-    borderColor: "#334155",
-    textStyle: { color: "#f1f5f9" },
+    backgroundColor: CHART_COLORS.tooltipBg,
+    borderColor: CHART_COLORS.tooltipBorder,
+    textStyle: { color: CHART_COLORS.tooltipText },
   },
   categoryAxis: {
-    axisLine: { lineStyle: { color: "#334155" } },
-    axisTick: { lineStyle: { color: "#334155" } },
-    axisLabel: { color: "#94a3b8" },
-    splitLine: { lineStyle: { color: "#1e293b" } },
+    axisLine: { lineStyle: { color: CHART_COLORS.axisLine } },
+    axisTick: { lineStyle: { color: CHART_COLORS.axisLine } },
+    axisLabel: { color: CHART_COLORS.axisLabel },
+    splitLine: { lineStyle: { color: CHART_COLORS.splitLine } },
   },
   valueAxis: {
-    axisLine: { lineStyle: { color: "#334155" } },
-    axisTick: { lineStyle: { color: "#334155" } },
-    axisLabel: { color: "#94a3b8" },
-    splitLine: { lineStyle: { color: "#1e293b" } },
+    axisLine: { lineStyle: { color: CHART_COLORS.axisLine } },
+    axisTick: { lineStyle: { color: CHART_COLORS.axisLine } },
+    axisLabel: { color: CHART_COLORS.axisLabel },
+    splitLine: { lineStyle: { color: CHART_COLORS.splitLine } },
   },
 }
 
@@ -45,7 +58,9 @@ let registered = false
 
 export function registerTheme() {
   if (!registered) {
-    echarts.registerTheme("optumDark", optumDark)
+    echarts.registerTheme("optumLight", optumLight)
     registered = true
   }
 }
+
+export { echarts }

@@ -1,4 +1,5 @@
 import ReactECharts from "echarts-for-react"
+import { CHART_COLORS } from "../../lib/echartsTheme"
 
 interface BarChartProps {
   title?: string
@@ -27,24 +28,24 @@ export function BarChart({
   const catAxis = {
     type: "category" as const,
     data: categories,
-    axisLabel: { color: "#94a3b8", fontSize: 10 },
-    axisLine: { lineStyle: { color: "#334155" } },
+    axisLabel: { color: CHART_COLORS.axisLabel, fontSize: 10 },
+    axisLine: { lineStyle: { color: CHART_COLORS.axisLine } },
   }
 
   const valAxis = {
     type: "value" as const,
     axisLabel: {
-      color: "#94a3b8",
+      color: CHART_COLORS.axisLabel,
       formatter: formatter ? (v: number) => formatter(v) : undefined,
     },
-    splitLine: { lineStyle: { color: "#1e293b" } },
+    splitLine: { lineStyle: { color: CHART_COLORS.splitLine } },
   }
 
   return (
     <ReactECharts
       option={{
         title: title
-          ? { text: title, left: "center", textStyle: { color: "#f1f5f9", fontSize: 13 } }
+          ? { text: title, left: "center", textStyle: { color: CHART_COLORS.titleText, fontSize: 13 } }
           : undefined,
         tooltip: {
           trigger: "axis",
@@ -69,7 +70,7 @@ export function BarChart({
         animationDuration: 600,
       }}
       style={{ height }}
-      theme="optumDark"
+      theme="optumLight"
     />
   )
 }

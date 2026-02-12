@@ -2,6 +2,9 @@ import { useState, useCallback, useEffect } from "react"
 
 const TOTAL_PAGES = 3
 
+export const PAGE_IDS = ["home", "population", "segmentation"] as const
+export const PAGE_LABELS = ["Home", "Population Overview", "Segmentation Analysis"] as const
+
 export function usePageNavigation() {
   const [page, setPage] = useState(0)
 

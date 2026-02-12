@@ -12,7 +12,7 @@ export const clusterPersonas: ClusterPersona[] = [
     id: 1,
     name: "At-Risk Baseline",
     short: "Mild Hypertension",
-    color: "#EF4444",
+    color: "#60A5FA",
     narrative:
       "Primarily younger adults with emerging hypertension (HYPER_FLAG). Low interaction with specialty care; standard PCP adherence. This cohort represents the earliest intervention window - lifestyle modifications and medication adherence programs could prevent progression to more severe cardiometabolic disease states.",
     keyFeatures: [
@@ -27,7 +27,7 @@ export const clusterPersonas: ClusterPersona[] = [
     id: 2,
     name: "Unmanaged Metabolic Syndrome",
     short: "Diabetes + Hypertension",
-    color: "#F97316",
+    color: "#34D399",
     narrative:
       "High prevalence of dual-diagnosis Diabetes and Hypertension. Significant utilization of Endocrinology, driving higher pharmacy cost risks (rx_cost_risk). This population is at an inflection point - without intensive management, they will progress toward cardiac events and renal complications within 18-24 months.",
     keyFeatures: [
@@ -42,7 +42,7 @@ export const clusterPersonas: ClusterPersona[] = [
     id: 3,
     name: "Advanced Heart Failure",
     short: "Cardiac High-Acuity",
-    color: "#EAB308",
+    color: "#A78BFA",
     narrative:
       "High-acuity cardiac cohort defined by frequent Cardiology touchpoints, severe inpatient costs, and elevated 30-day readmission rates. These members drive disproportionate cost - the top decile accounts for over 40% of total inpatient spend. Remote monitoring and care coordination are critical.",
     keyFeatures: [
@@ -57,7 +57,7 @@ export const clusterPersonas: ClusterPersona[] = [
     id: 4,
     name: "Diabetic Nephropathy / ESRD",
     short: "Kidney Disease",
-    color: "#22C55E",
+    color: "#F472B6",
     narrative:
       "Severe metabolic progression resulting in Kidney Disease and ESRD flags. Distinctive spikes in Nephrology visits and the highest demographic medical risk scores. This cluster includes the most expensive individual members in the population - ESRD management alone averages $90K+ annually per member.",
     keyFeatures: [
@@ -72,7 +72,7 @@ export const clusterPersonas: ClusterPersona[] = [
     id: 5,
     name: "Rural SDOH Crisis",
     short: "Arkansas Delta Profile",
-    color: "#3B82F6",
+    color: "#38BDF8",
     narrative:
       "Geographically isolated population reflecting severe Arkansas rurality. Characterized by extreme distances to Urgent Care (hifld_dist_uc_zp) and lack of broadband access. Clinical profile shows zero PCP engagement but high ER utilization for acute diabetic episodes. This is the population that falls through every crack in the traditional healthcare system.",
     keyFeatures: [
@@ -87,7 +87,7 @@ export const clusterPersonas: ClusterPersona[] = [
     id: 6,
     name: "Frail Elderly Complex",
     short: "Geriatric Cardio-Metabolic",
-    color: "#8B5CF6",
+    color: "#FBBF24",
     narrative:
       "Geriatric cohort (75+) with compounding cardiometabolic issues. High Frailty Indices and Charlson Comorbidity scores driven by overlapping Heart, Stroke, and cognitive flags. These members require integrated geriatric care models that address polypharmacy, fall risk, and care transitions simultaneously.",
     keyFeatures: [

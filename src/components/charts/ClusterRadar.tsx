@@ -1,5 +1,6 @@
 import ReactECharts from "echarts-for-react"
 import { clusterStats, CLUSTER_COLORS } from "../../lib/dataUtils"
+import { CHART_COLORS } from "../../lib/echartsTheme"
 
 interface ClusterRadarProps {
   highlightCluster?: number | null
@@ -73,12 +74,12 @@ export function ClusterRadar({ highlightCluster }: ClusterRadarProps) {
         legend: {
           bottom: 0,
           type: "scroll",
-          textStyle: { color: "#94a3b8", fontSize: 10 },
+          textStyle: { color: CHART_COLORS.legendText, fontSize: 10 },
           itemWidth: 10,
           itemHeight: 10,
           itemGap: 12,
-          pageIconColor: "#94a3b8",
-          pageTextStyle: { color: "#94a3b8" },
+          pageIconColor: CHART_COLORS.legendPageIcon,
+          pageTextStyle: { color: CHART_COLORS.legendText },
         },
         radar: {
           indicator,
@@ -86,16 +87,16 @@ export function ClusterRadar({ highlightCluster }: ClusterRadarProps) {
           splitNumber: 4,
           center: ["50%", "48%"],
           radius: "60%",
-          axisName: { color: "#94a3b8", fontSize: 10 },
-          splitLine: { lineStyle: { color: "#1e293b" } },
+          axisName: { color: CHART_COLORS.axisLabel, fontSize: 10 },
+          splitLine: { lineStyle: { color: CHART_COLORS.splitLine } },
           splitArea: { areaStyle: { color: ["transparent"] } },
-          axisLine: { lineStyle: { color: "#334155" } },
+          axisLine: { lineStyle: { color: CHART_COLORS.axisLine } },
         },
         series: [{ type: "radar", data }],
         animationDuration: 400,
       }}
       style={{ height: 400 }}
-      theme="optumDark"
+      theme="optumLight"
     />
   )
 }

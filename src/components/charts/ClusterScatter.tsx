@@ -1,5 +1,6 @@
 import ReactECharts from "echarts-for-react"
 import { members, CLUSTER_COLORS, CLUSTER_NAMES } from "../../lib/dataUtils"
+import { CHART_COLORS } from "../../lib/echartsTheme"
 
 interface ClusterScatterProps {
   highlightCluster?: number | null
@@ -25,7 +26,7 @@ export function ClusterScatter({ highlightCluster }: ClusterScatterProps) {
         opacity: isHighlighted ? 0.85 : 0.15,
       },
       emphasis: {
-        itemStyle: { borderColor: "#fff", borderWidth: 1 },
+        itemStyle: { borderColor: CHART_COLORS.axisLine, borderWidth: 1 },
       },
     }
   })
@@ -43,7 +44,7 @@ export function ClusterScatter({ highlightCluster }: ClusterScatterProps) {
         legend: {
           data: clusters.map((c) => CLUSTER_NAMES[c]),
           bottom: 0,
-          textStyle: { color: "#94a3b8", fontSize: 10 },
+          textStyle: { color: CHART_COLORS.legendText, fontSize: 10 },
           itemWidth: 10,
           itemHeight: 10,
         },
@@ -51,20 +52,20 @@ export function ClusterScatter({ highlightCluster }: ClusterScatterProps) {
         xAxis: {
           type: "value",
           axisLabel: { show: false },
-          axisLine: { lineStyle: { color: "#334155" } },
-          splitLine: { lineStyle: { color: "#1e293b" } },
+          axisLine: { lineStyle: { color: CHART_COLORS.axisLine } },
+          splitLine: { lineStyle: { color: CHART_COLORS.splitLine } },
         },
         yAxis: {
           type: "value",
           axisLabel: { show: false },
-          axisLine: { lineStyle: { color: "#334155" } },
-          splitLine: { lineStyle: { color: "#1e293b" } },
+          axisLine: { lineStyle: { color: CHART_COLORS.axisLine } },
+          splitLine: { lineStyle: { color: CHART_COLORS.splitLine } },
         },
         series,
         animationDuration: 800,
       }}
       style={{ height: 400 }}
-      theme="optumDark"
+      theme="optumLight"
     />
   )
 }

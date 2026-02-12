@@ -1,4 +1,5 @@
 import ReactECharts from "echarts-for-react"
+import { CHART_COLORS } from "../../lib/echartsTheme"
 
 interface PieDonutProps {
   title?: string
@@ -11,7 +12,7 @@ export function PieDonut({ title, data, height = 250 }: PieDonutProps) {
     <ReactECharts
       option={{
         title: title
-          ? { text: title, left: "center", textStyle: { color: "#f1f5f9", fontSize: 13 } }
+          ? { text: title, left: "center", textStyle: { color: CHART_COLORS.titleText, fontSize: 13 } }
           : undefined,
         tooltip: {
           trigger: "item",
@@ -20,12 +21,12 @@ export function PieDonut({ title, data, height = 250 }: PieDonutProps) {
         legend: {
           bottom: 0,
           type: "scroll",
-          textStyle: { color: "#94a3b8", fontSize: 10 },
+          textStyle: { color: CHART_COLORS.legendText, fontSize: 10 },
           itemWidth: 10,
           itemHeight: 10,
           itemGap: 12,
-          pageIconColor: "#94a3b8",
-          pageTextStyle: { color: "#94a3b8" },
+          pageIconColor: CHART_COLORS.legendPageIcon,
+          pageTextStyle: { color: CHART_COLORS.legendText },
         },
         series: [
           {
@@ -37,16 +38,16 @@ export function PieDonut({ title, data, height = 250 }: PieDonutProps) {
               value: d.value,
               itemStyle: d.color ? { color: d.color } : undefined,
             })),
-            label: { color: "#94a3b8", fontSize: 10, formatter: "{b}: {d}%" },
+            label: { color: CHART_COLORS.axisLabel, fontSize: 10, formatter: "{b}: {d}%" },
             emphasis: {
-              itemStyle: { shadowBlur: 10, shadowColor: "rgba(0,0,0,0.5)" },
+              itemStyle: { shadowBlur: 10, shadowColor: "rgba(0,0,0,0.15)" },
             },
           },
         ],
         animationDuration: 600,
       }}
       style={{ height }}
-      theme="optumDark"
+      theme="optumLight"
     />
   )
 }

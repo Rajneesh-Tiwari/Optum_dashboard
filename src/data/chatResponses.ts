@@ -187,15 +187,6 @@ Each cluster maps to specific, evidence-based interventions:
 
 // ── Page 3: Cluster Deep Dive (cluster-aware) ────────────────────
 
-const CLUSTER_QUERY_TEMPLATES = [
-  (_name: string, id: number) =>
-    `What are the key clinical risks for Cluster ${id} members?`,
-  (name: string, _id: number) =>
-    `What interventions would work best for the ${name} cohort?`,
-  (name: string, _id: number) =>
-    `How does ${name} compare to the overall population?`,
-] as const
-
 const CLUSTER_RESPONSES: Record<number, Record<string, ChatMessage>> = {
   1: {
     risks: {
@@ -563,32 +554,51 @@ export const FALLBACK_RESPONSE: ChatMessage = {
 }
 
 // ── Query matching ───────────────────────────────────────────────
+// Page indices: 0=Home, 1=Population Overview, 2=Segmentation Analysis
 
-export function getSuggestedQueries(page: number, activeCluster: number): string[] {
-  if (page === 0) return [...PAGE1_QUERIES]
-  if (page === 1) return [...PAGE2_QUERIES]
-  // Page 2 (deep dive) - adapt to active cluster
-  const name = CLUSTER_NAMES_SHORT[activeCluster] || `Cluster ${activeCluster}`
-  return CLUSTER_QUERY_TEMPLATES.map((fn) => fn(name, activeCluster))
+const HOME_QUERIES = [
+  "What is Value Connect?",
+  "Give me an overview of this population",
+  "What can I explore in this dashboard?",
+] as const
+
+const HOME_RESPONSES: Record<string, ChatMessage> = {
+  overview: {
+    role: "assistant",
+    content: `**Value Connect** is an AI-powered population health analytics platform focused on a 500-member cardiometabolic cohort in Arkansas.
+
+**Key capabilities:**
+- **Population Analysis** - Demographics, feature distributions, cost breakdowns, and county-level geographic heatmaps
+- **Segmentation Analysis** - 6 AI-discovered clinical clusters with t-SNE projections, radar comparisons, sankey flows, and deep-dive personas
+
+The platform identifies actionable intervention opportunities across segments defined by disease burden, utilization patterns, SDOH factors, and cost architecture.`,
+    sources: [
+      { label: "Optum Internal: Value Connect Platform Overview, 2024", url: "#optum-internal" },
+    ],
+  },
 }
 
-const CLUSTER_NAMES_SHORT: Record<number, string> = {
-  1: "At-Risk Baseline",
-  2: "Unmanaged Metabolic Syndrome",
-  3: "Advanced Heart Failure",
-  4: "Diabetic Nephropathy / ESRD",
-  5: "Rural SDOH Crisis",
-  6: "Frail Elderly Complex",
+export function getSuggestedQueries(page: number): string[] {
+  if (page === 0) return [...HOME_QUERIES]
+  if (page === 1) return [...PAGE1_QUERIES]
+  if (page === 2) return [...PAGE2_QUERIES]
+  return [...HOME_QUERIES]
 }
 
 export function matchQuery(
   input: string,
   page: number,
-  activeCluster: number
 ): ChatMessage | null {
   const lower = input.toLowerCase()
 
+  // Page 0: Home
   if (page === 0) {
+    if (lower.includes("value connect") || lower.includes("overview") || lower.includes("explore") || lower.includes("what"))
+      return HOME_RESPONSES.overview
+  }
+
+  // Page 1: Population Overview
+  if (page === 1) {
     if (lower.includes("cost driver") || lower.includes("biggest cost") || lower.includes("expensive"))
       return PAGE1_RESPONSES.cost_drivers
     if (lower.includes("esrd") || lower.includes("renal") || lower.includes("kidney"))
@@ -597,25 +607,39 @@ export function matchQuery(
       return PAGE1_RESPONSES.sdoh
   }
 
-  if (page === 1) {
+  // Page 2: Segmentation Analysis (merged)
+  if (page === 2) {
     if (lower.includes("most expensive") || lower.includes("costliest") || lower.includes("cost"))
       return PAGE2_RESPONSES.most_expensive
     if (lower.includes("distinct") || lower.includes("separated") || lower.includes("different"))
       return PAGE2_RESPONSES.distinctness
     if (lower.includes("intervention") || lower.includes("opportunity") || lower.includes("program"))
       return PAGE2_RESPONSES.interventions
-  }
 
-  if (page === 2) {
-    const clusterResp = CLUSTER_RESPONSES[activeCluster]
-    if (!clusterResp) return null
-    if (lower.includes("risk") || lower.includes("clinical"))
-      return clusterResp.risks
-    if (lower.includes("intervention") || lower.includes("work best") || lower.includes("program"))
-      return clusterResp.interventions
-    if (lower.includes("compare") || lower.includes("population") || lower.includes("baseline"))
-      return clusterResp.comparison
+    // Also match cluster-specific queries by keyword
+    for (const [clusterId, responses] of Object.entries(CLUSTER_RESPONSES)) {
+      const id = Number(clusterId)
+      const clusterName = CLUSTER_NAMES_REF[id]?.toLowerCase() || ""
+      if (lower.includes(`cluster ${id}`) || lower.includes(clusterName)) {
+        if (lower.includes("risk") || lower.includes("clinical"))
+          return responses.risks
+        if (lower.includes("intervention") || lower.includes("work best") || lower.includes("program"))
+          return responses.interventions
+        if (lower.includes("compare") || lower.includes("population") || lower.includes("baseline"))
+          return responses.comparison
+        return responses.risks // default to risks for cluster mention
+      }
+    }
   }
 
   return null
+}
+
+const CLUSTER_NAMES_REF: Record<number, string> = {
+  1: "at-risk",
+  2: "metabolic",
+  3: "heart failure",
+  4: "esrd",
+  5: "rural",
+  6: "frail elderly",
 }

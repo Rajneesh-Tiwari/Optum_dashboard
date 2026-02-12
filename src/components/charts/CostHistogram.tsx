@@ -1,5 +1,6 @@
 import ReactECharts from "echarts-for-react"
 import { membersInCluster, CLUSTER_COLORS, CLUSTER_NAMES } from "../../lib/dataUtils"
+import { CHART_COLORS } from "../../lib/echartsTheme"
 import { formatCurrency } from "../../lib/format"
 
 interface CostHistogramProps {
@@ -45,7 +46,7 @@ export function CostHistogram({ clusterId, height = 280 }: CostHistogramProps) {
         title: {
           text: clusterId ? `Cost Distribution - Cluster ${clusterId}` : "Cost Distribution by Cluster",
           left: "center",
-          textStyle: { color: "#f1f5f9", fontSize: 13 },
+          textStyle: { color: CHART_COLORS.titleText, fontSize: 13 },
         },
         tooltip: { trigger: "axis" },
         legend: clusterId
@@ -53,31 +54,31 @@ export function CostHistogram({ clusterId, height = 280 }: CostHistogramProps) {
           : {
               bottom: 0,
               type: "scroll",
-              textStyle: { color: "#94a3b8", fontSize: 9 },
+              textStyle: { color: CHART_COLORS.legendText, fontSize: 9 },
               itemWidth: 8,
               itemHeight: 8,
               itemGap: 10,
-              pageIconColor: "#94a3b8",
-              pageTextStyle: { color: "#94a3b8" },
+              pageIconColor: CHART_COLORS.legendPageIcon,
+              pageTextStyle: { color: CHART_COLORS.legendText },
             },
         grid: { left: 50, right: 20, bottom: clusterId ? 30 : 55, top: 45 },
         xAxis: {
           type: "category",
           data: labels,
-          axisLabel: { color: "#94a3b8", fontSize: 9, rotate: 25 },
-          axisLine: { lineStyle: { color: "#334155" } },
+          axisLabel: { color: CHART_COLORS.axisLabel, fontSize: 9, rotate: 25 },
+          axisLine: { lineStyle: { color: CHART_COLORS.axisLine } },
         },
         yAxis: {
           type: "value",
           name: "Members",
-          axisLabel: { color: "#94a3b8" },
-          splitLine: { lineStyle: { color: "#1e293b" } },
+          axisLabel: { color: CHART_COLORS.axisLabel },
+          splitLine: { lineStyle: { color: CHART_COLORS.splitLine } },
         },
         series,
         animationDuration: 600,
       }}
       style={{ height }}
-      theme="optumDark"
+      theme="optumLight"
     />
   )
 }

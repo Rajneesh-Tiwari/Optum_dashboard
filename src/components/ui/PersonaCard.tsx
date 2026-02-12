@@ -17,16 +17,16 @@ export function PersonaCard({ persona, animate = true }: PersonaCardProps) {
           AI
         </div>
         <div>
-          <div className="text-sm font-semibold text-slate-100">Clinical Persona</div>
-          <div className="text-xs text-slate-400">{persona.name}</div>
+          <div className="text-sm font-semibold text-gray-900">Clinical Persona</div>
+          <div className="text-xs text-gray-500">{persona.name}</div>
         </div>
       </div>
-      <p className={`text-sm text-slate-300 leading-relaxed mb-3 ${!done ? "typewriter-cursor" : ""}`}>
+      <p className={`text-sm text-gray-600 leading-relaxed mb-3 ${!done ? "typewriter-cursor" : ""}`}>
         {displayed}
       </p>
       <div className="space-y-1">
         {persona.keyFeatures.map((f, i) => (
-          <div key={i} className="flex items-start gap-2 text-xs text-slate-400">
+          <div key={i} className="flex items-start gap-2 text-xs text-gray-500">
             <span className="text-optum mt-0.5">-</span>
             <span>{f}</span>
           </div>
