@@ -12,9 +12,9 @@ interface CountyHeatmapProps {
 }
 
 const METRIC_CONFIG = {
-  avgRiskScore: { label: "Avg Risk Score", format: (v: number) => v.toFixed(3), colors: ["#dbeafe", "#3b82f6", "#dc2626"] },
-  avgCost: { label: "Avg PMPY Cost", format: (v: number) => `$${(v / 1000).toFixed(0)}K`, colors: ["#dcfce7", "#22c55e", "#dc2626"] },
-  memberCount: { label: "Member Count", format: (v: number) => String(Math.round(v)), colors: ["#f3f4f6", "#FF612B", "#991b1b"] },
+  avgRiskScore: { label: "Avg Risk Score", format: (v: number) => v.toFixed(3), colors: ["#EFF5E6", "#799842", "#D8A8B8"] },
+  avgCost: { label: "Avg PMPY Cost", format: (v: number) => `$${(v / 1000).toFixed(0)}K`, colors: ["#EFF5E6", "#A8C8A0", "#E8BA98"] },
+  memberCount: { label: "Member Count", format: (v: number) => String(Math.round(v)), colors: ["#f3f4f6", "#8CB8D8", "#B0A5D4"] },
 }
 
 export function CountyHeatmap({ countyStats, metric, height = 500, onCountyClick, selectedCounty }: CountyHeatmapProps) {
@@ -94,11 +94,11 @@ Diabetes: ${stat.pctDiabetes.toFixed(0)}%`
             data: mapData,
             emphasis: {
               label: { show: true, color: CHART_COLORS.titleText },
-              itemStyle: { areaColor: "#FF612B", borderColor: "#FF612B", borderWidth: 2 },
+              itemStyle: { areaColor: "#799842", borderColor: "#5F7A33", borderWidth: 2 },
             },
             select: {
               label: { show: true, color: "#fff", fontWeight: "bold" },
-              itemStyle: { areaColor: "#3B82F6", borderColor: "#2563EB", borderWidth: 2 },
+              itemStyle: { areaColor: "#5F7A33", borderColor: "#4A6228", borderWidth: 2 },
             },
             label: {
               show: false,

@@ -64,7 +64,7 @@ export function BarChart({
             type: "bar",
             data,
             barWidth: "60%",
-            itemStyle: colors ? undefined : { color: "#FF612B" },
+            itemStyle: colors ? undefined : { color: "#799842" },
           },
         ],
         animationDuration: 600,

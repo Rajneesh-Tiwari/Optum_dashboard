@@ -18,14 +18,17 @@
   --color-gray-700: #334155;
   --color-gray-800: #1E293B;
   --color-gray-900: #0F172A;
-  --color-optum: #FF612B;
-  --color-optum-dark: #e5501f;
-  --color-cluster-1: #60A5FA;
-  --color-cluster-2: #34D399;
-  --color-cluster-3: #A78BFA;
-  --color-cluster-4: #F472B6;
-  --color-cluster-5: #38BDF8;
-  --color-cluster-6: #FBBF24;
+  --color-primary: #799842;
+  --color-primary-dark: #5F7A33;
+  --color-primary-light: #EFF5E6;
+  --color-optum: #799842;
+  --color-optum-dark: #5F7A33;
+  --color-cluster-1: #89BEC0;
+  --color-cluster-2: #B0A5D4;
+  --color-cluster-3: #E8BA98;
+  --color-cluster-4: #8CB8D8;
+  --color-cluster-5: #D8A8B8;
+  --color-cluster-6: #A8C8A0;
 }
 
 body {
@@ -35,54 +38,55 @@ body {
   margin: 0;
 }
 
-/* Glass card with subtle blue tint */
+/* Minimal card - no colored borders */
 .glass-card {
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(96, 165, 250, 0.15);
+  border: 1px solid rgba(0, 0, 0, 0.06);
   border-radius: 0.75rem;
-  box-shadow: 0 1px 3px rgba(96, 165, 250, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .glass-card:hover {
-  border-color: rgba(96, 165, 250, 0.25);
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
-/* Buttons and selects - blue hue ring */
+/* Buttons and selects */
 select,
 button:not(.segment-pill):not([class*="bg-optum"]) {
   transition: all 0.15s ease;
 }
 
 select:hover {
-  border-color: #93C5FD !important;
-  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+  border-color: #94A3B8 !important;
+  box-shadow: 0 0 0 3px rgba(121, 152, 66, 0.08);
 }
 
 select:focus {
-  border-color: #60A5FA !important;
-  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.18);
+  border-color: #799842 !important;
+  box-shadow: 0 0 0 3px rgba(121, 152, 66, 0.15);
   outline: none;
 }
 
 /* Category pill buttons */
 .category-pill {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 1px solid rgba(96, 165, 250, 0.15);
+  border: 1px solid rgba(0, 0, 0, 0.06);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
 .category-pill:hover {
-  border-color: rgba(96, 165, 250, 0.35);
-  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.08);
+  border-color: rgba(0, 0, 0, 0.12);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.03);
   transform: translateY(-1px);
 }
 
 .category-pill.active {
-  background: rgba(96, 165, 250, 0.08);
-  border-color: rgba(96, 165, 250, 0.4);
-  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.12);
+  background: rgba(121, 152, 66, 0.08);
+  border-color: rgba(121, 152, 66, 0.35);
+  box-shadow: 0 0 0 3px rgba(121, 152, 66, 0.1);
 }
 
 /* Segment pill styling */
@@ -91,12 +95,12 @@ select:focus {
 }
 
 .segment-pill:hover {
-  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   transform: translateY(-1px);
 }
 
 .segment-pill.active {
-  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.12), 0 4px 12px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 0 0 2px rgba(121, 152, 66, 0.25), 0 4px 12px rgba(0, 0, 0, 0.06);
   transform: translateY(-1px);
 }
 
@@ -128,7 +132,120 @@ select:focus {
 .typewriter-cursor::after {
   content: '|';
   animation: typewriter-cursor 0.8s infinite;
-  color: var(--color-optum);
+  color: var(--color-primary);
+}
+
+/* Insight cards - blue outer hue */
+.insight-card {
+  background: linear-gradient(135deg, rgba(239, 246, 255, 0.85), rgba(238, 242, 255, 0.6), rgba(255, 255, 255, 0.8));
+  border: 1px solid rgba(147, 197, 253, 0.35);
+  border-radius: 1rem;
+  box-shadow:
+    0 0 0 1px rgba(147, 197, 253, 0.06),
+    0 0 24px rgba(99, 102, 241, 0.06),
+    0 0 48px rgba(59, 130, 246, 0.04),
+    0 1px 3px rgba(0, 0, 0, 0.03);
+  backdrop-filter: blur(16px);
+  position: relative;
+  overflow: hidden;
+}
+
+.insight-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.3), rgba(99, 102, 241, 0.25), rgba(147, 197, 253, 0.2));
+  border-radius: 1rem 1rem 0 0;
+}
+
+/* Transition narrative - lighter variant */
+.narrative-card {
+  background: linear-gradient(135deg, rgba(239, 246, 255, 0.5), rgba(248, 250, 252, 0.8));
+  border: 1px solid rgba(147, 197, 253, 0.2);
+  border-radius: 0.75rem;
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  position: relative;
+}
+
+.narrative-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, rgba(59, 130, 246, 0.4), rgba(99, 102, 241, 0.2));
+  border-radius: 0.75rem 0 0 0.75rem;
+}
+
+/* Bridge CTA card */
+.bridge-card {
+  background: linear-gradient(135deg, rgba(239, 246, 255, 0.9), rgba(224, 231, 255, 0.7));
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  border-radius: 1rem;
+  box-shadow:
+    0 0 32px rgba(99, 102, 241, 0.08),
+    0 0 64px rgba(59, 130, 246, 0.04),
+    0 2px 8px rgba(0, 0, 0, 0.03);
+  transition: all 0.2s ease;
+}
+
+.bridge-card:hover {
+  border-color: rgba(99, 102, 241, 0.4);
+  box-shadow:
+    0 0 32px rgba(99, 102, 241, 0.12),
+    0 0 64px rgba(59, 130, 246, 0.06),
+    0 4px 12px rgba(0, 0, 0, 0.04);
+  transform: translateY(-1px);
+}
+
+/* Range slider - cross browser */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  background: #E2E8F0;
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #799842;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+  box-shadow: 0 2px 8px rgba(121, 152, 66, 0.35);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #799842;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+}
+
+input[type="range"]::-moz-range-track {
+  height: 6px;
+  background: #E2E8F0;
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar {

@@ -14,6 +14,8 @@ interface ChatDockProps {
   open: boolean
   onToggle: () => void
   currentPage: number
+  pendingQuery?: string
+  onPendingQueryConsumed?: () => void
 }
 
 interface DisplayMessage extends ChatMessage {
@@ -22,7 +24,7 @@ interface DisplayMessage extends ChatMessage {
   sources?: Source[]
 }
 
-export function ChatDock({ open, onToggle, currentPage }: ChatDockProps) {
+export function ChatDock({ open, onToggle, currentPage, pendingQuery, onPendingQueryConsumed }: ChatDockProps) {
   const [messages, setMessages] = useState<DisplayMessage[]>([])
   const [input, setInput] = useState("")
   const [simulating, setSimulating] = useState(false)
@@ -56,14 +58,25 @@ export function ChatDock({ open, onToggle, currentPage }: ChatDockProps) {
     addMessage(response, true)
   }
 
-  const handleSubmit = (query: string) => {
+  const handleSubmit = useCallback((query: string) => {
     if (!query.trim() || simulating) return
     addMessage({ role: "user", content: query })
     setInput("")
 
     const matched = matchQuery(query, currentPage)
     runSimulation(matched ?? FALLBACK_RESPONSE)
-  }
+  }, [simulating, currentPage])
+
+  const handleSubmitRef = useRef(handleSubmit)
+  handleSubmitRef.current = handleSubmit
+
+  // Auto-submit pending query from landing page
+  useEffect(() => {
+    if (open && pendingQuery && !simulating) {
+      handleSubmitRef.current(pendingQuery)
+      onPendingQueryConsumed?.()
+    }
+  }, [open, pendingQuery, simulating, onPendingQueryConsumed])
 
   const pageLabel = PAGE_LABELS[currentPage] ?? "Home"
 
@@ -73,7 +86,8 @@ export function ChatDock({ open, onToggle, currentPage }: ChatDockProps) {
       {!open && (
         <button
           onClick={onToggle}
-          className="fixed top-5 right-6 z-40 w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 hover:scale-105 transition-all cursor-pointer flex items-center justify-center"
+          className="fixed top-5 right-6 z-40 w-12 h-12 rounded-2xl text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all cursor-pointer flex items-center justify-center"
+          style={{ background: 'linear-gradient(135deg, #799842, #5F7A33)', boxShadow: '0 4px 12px rgba(121, 152, 66, 0.3)' }}
           title="Open Insights Copilot"
         >
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -127,7 +141,7 @@ export function ChatDock({ open, onToggle, currentPage }: ChatDockProps) {
           {messages.length === 0 && !simulating && (
             <div className="py-6">
               <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-optum/10 to-optum/5 border border-optum/15 flex items-center justify-center mx-auto mb-4">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FF612B" strokeWidth="1.5">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#799842" strokeWidth="1.5">
                   <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                 </svg>
               </div>
@@ -287,7 +301,7 @@ function AssistantMessage({ content, animate, sources }: { content: string; anim
                       href={src.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-500 underline underline-offset-2 transition-colors"
+                      className="text-primary-dark hover:text-primary underline underline-offset-2 transition-colors"
                     >
                       {src.label}
                     </a>

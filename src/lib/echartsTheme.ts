@@ -15,14 +15,14 @@ export const CHART_COLORS = {
 
 const optumLight = {
   color: [
-    "#60A5FA",
-    "#34D399",
-    "#A78BFA",
-    "#F472B6",
-    "#38BDF8",
-    "#FBBF24",
-    "#FF612B",
-    "#EC4899",
+    "#89BEC0",
+    "#B0A5D4",
+    "#E8BA98",
+    "#8CB8D8",
+    "#D8A8B8",
+    "#A8C8A0",
+    "#C4B08C",
+    "#C09CC0",
   ],
   backgroundColor: "transparent",
   textStyle: {

@@ -19,9 +19,10 @@ interface SankeyChartProps {
   links: SankeyLink[]
   height?: number
   orient?: "horizontal" | "vertical"
+  onNodeClick?: (nodeName: string) => void
 }
 
-export function SankeyChart({ title, nodes, links, height = 400, orient = "horizontal" }: SankeyChartProps) {
+export function SankeyChart({ title, nodes, links, height = 400, orient = "horizontal", onNodeClick }: SankeyChartProps) {
   const chartRef = useRef<ReactECharts>(null)
 
   const highlightPath = useCallback(
@@ -108,14 +109,16 @@ export function SankeyChart({ title, nodes, links, height = 400, orient = "horiz
     (params: { dataType: string; name?: string; data?: { source?: string; target?: string } }) => {
       if (params.dataType === "node" && params.name) {
         highlightPath([params.name], "both")
+        onNodeClick?.(params.name)
       } else if (params.dataType === "edge" && params.data?.source && params.data?.target) {
-        // Clicked a link: highlight upstream from source + downstream from target + the link itself
         highlightPath([params.data.source, params.data.target], "both")
+        onNodeClick?.(params.data.source)
       } else {
         resetChart()
+        onNodeClick?.("")
       }
     },
-    [highlightPath, resetChart]
+    [highlightPath, resetChart, onNodeClick]
   )
 
   const onEvents = {

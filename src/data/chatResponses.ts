@@ -544,6 +544,79 @@ This cluster needs quality-of-life-focused care, not aggressive disease manageme
   },
 }
 
+// ── Page 3: Intervention Planner ─────────────────────────────────
+
+const PAGE3_QUERIES = [
+  "Which segment has the highest ROI for intervention?",
+  "How sensitive are savings to population reach?",
+  "What's the total projected savings across all segments?",
+] as const
+
+const PAGE3_RESPONSES: Record<string, ChatMessage> = {
+  highest_roi: {
+    role: "assistant",
+    content: `**Highest ROI Intervention Analysis:**
+
+Ranking segments by intervention ROI (at default parameters):
+
+1. **S1: At-Risk Baseline** - Highest ROI ratio due to low program cost ($75/mo) relative to prevented escalation. Every $1 invested prevents $3-8 in future spend.
+2. **S3: Heart Failure** - High absolute savings from readmission reduction, but higher program cost ($800/mo). Break-even in 4-6 months.
+3. **S5: Rural SDOH** - Moderate ROI with outsized long-term value. Preventing progression from this segment to Clusters 3/4 avoids $60K+ PMPY over 10 years.
+
+**Key Insight:** S1 offers the best ratio, but S3 offers the highest absolute dollar savings. Budget-constrained plans should prioritize S1; plans optimizing total cost reduction should start with S3.`,
+    sources: [
+      { label: "HWHI Internal: Intervention ROI Models, 2024", url: "#optum-internal" },
+      { label: "CMS Chronic Conditions Dashboard", url: "https://www.cms.gov/data-research/statistics-trends-and-reports/chronic-conditions" },
+      { label: "Knowler WC et al. NEJM 2002 - Diabetes Prevention Program", url: "https://pubmed.ncbi.nlm.nih.gov/11832527/" },
+    ],
+  },
+  sensitivity: {
+    role: "assistant",
+    content: `**Population Reach Sensitivity Analysis:**
+
+Population reach is the single most impactful slider for total portfolio savings:
+
+- **At 50% reach:** Portfolio savings are roughly half of maximum. Good for pilot programs.
+- **At 75% reach:** Diminishing returns begin for most segments. Sweet spot for cost-effective deployment.
+- **At 100% reach:** Maximum savings but includes low-acuity members where ROI per dollar is lower.
+
+**Segment-Specific Sensitivity:**
+- **S3 (Heart Failure):** Most sensitive - each 10% reach increase adds significant savings due to high per-member cost
+- **S1 (At-Risk):** Least sensitive per-member, but large cohort size means total impact scales linearly
+- **S4 (ESRD):** Moderate sensitivity - small segment size limits absolute scaling
+
+**Recommendation:** Start with 50-60% reach targeting highest-acuity members within each segment, then expand based on observed outcomes.`,
+    sources: [
+      { label: "HWHI Internal: Sensitivity Analysis Framework, 2024", url: "#optum-internal" },
+      { label: "AHRQ: Care Coordination Cost-Effectiveness", url: "https://www.ahrq.gov/research/findings/evidence-based-reports/caregapupd-evidence-report.html" },
+      { label: "Koehler F et al. Lancet 2018 - TIM-HF2 Remote Monitoring Trial", url: "https://pubmed.ncbi.nlm.nih.gov/30153985/" },
+    ],
+  },
+  total_savings: {
+    role: "assistant",
+    content: `**Portfolio-Level Projected Savings:**
+
+With default intervention parameters across all 6 segments:
+
+**By Segment (Annual Net Savings):**
+- S1 At-Risk: Moderate savings, high ROI ratio
+- S2 Metabolic: Moderate-high savings from pharmacy optimization + IP reduction
+- S3 Heart Failure: Highest absolute savings from readmission prevention
+- S4 ESRD: High per-member savings offset by high program cost
+- S5 Rural SDOH: Lower savings but critical for access equity
+- S6 Frail Elderly: Moderate savings, primarily from hospitalization avoidance
+
+**Key Levers:** IP cost reduction and population reach are the two most impactful parameters. A 5% improvement in IP reduction across all segments yields approximately 15-20% more portfolio savings.
+
+**Caveat:** These are modeled projections. Actual savings depend on implementation quality, member engagement, and provider network readiness.`,
+    sources: [
+      { label: "HWHI Internal: Portfolio Savings Model, 2024", url: "#optum-internal" },
+      { label: "Optum Internal: Value-Based Care Outcomes Report, 2023", url: "#optum-internal" },
+      { label: "CMS Innovation Center: Risk Stratification Models", url: "https://www.cms.gov/priorities/innovation/key-concepts/risk-stratification" },
+    ],
+  },
+}
+
 // ── Fallback ─────────────────────────────────────────────────────
 
 export const FALLBACK_RESPONSE: ChatMessage = {
@@ -557,23 +630,52 @@ export const FALLBACK_RESPONSE: ChatMessage = {
 // Page indices: 0=Home, 1=Population Overview, 2=Segmentation Analysis
 
 const HOME_QUERIES = [
-  "What is Value Connect?",
-  "Give me an overview of this population",
-  "What can I explore in this dashboard?",
+  "Which segments have the highest intervention ROI?",
+  "Where should we focus resources this quarter?",
+  "What are the top cost drivers in this population?",
 ] as const
 
 const HOME_RESPONSES: Record<string, ChatMessage> = {
-  overview: {
+  roi: {
     role: "assistant",
-    content: `**Value Connect** is an AI-powered population health analytics platform focused on a 500-member cardiometabolic cohort in Arkansas.
+    content: `**Highest intervention ROI by segment:**
 
-**Key capabilities:**
-- **Population Analysis** - Demographics, feature distributions, cost breakdowns, and county-level geographic heatmaps
-- **Segmentation Analysis** - 6 AI-discovered clinical clusters with t-SNE projections, radar comparisons, sankey flows, and deep-dive personas
+1. **S3: Heart Failure** - Remote monitoring + care transitions. 35% readmission rate is 3x national avg. Break-even in 4-6 months. Estimated savings: $18K/member/yr.
+2. **S1: At-Risk Baseline** - Lifestyle modification programs at $600-1,200/yr prevent 3-8x cost escalation. 100 members, largest early-intervention pool.
+3. **S4: ESRD** - Pre-ESRD diversion for the 20% not yet on dialysis saves $45K+/member. Home dialysis conversion saves 30-40% vs. in-center.
 
-The platform identifies actionable intervention opportunities across segments defined by disease burden, utilization patterns, SDOH factors, and cost architecture.`,
+**Recommendation:** Prioritize S3 for immediate ROI, S1 for long-term cost avoidance, S4 for highest per-member savings.`,
     sources: [
-      { label: "Optum Internal: Value Connect Platform Overview, 2024", url: "#optum-internal" },
+      { label: "Optum Internal: Intervention ROI Models, 2024", url: "#optum-internal" },
+      { label: "CMS Chronic Conditions Dashboard", url: "https://www.cms.gov/data-research/statistics-trends-and-reports/chronic-conditions" },
+    ],
+  },
+  focus: {
+    role: "assistant",
+    content: `**Recommended focus areas for this quarter:**
+
+1. **Care transitions for S3 (Heart Failure)** - 75 members driving $9M+ in annual acute spend. A 10% readmission reduction saves ~$900K/yr.
+2. **Access gap closure for S5 (Rural SDOH)** - 85 members with zero PCP engagement. Deploy mobile health units or telehealth to 3 highest-concentration counties.
+3. **Diabetes management for S2 (Metabolic)** - 90 members at inflection point. Endocrinology coordination prevents cardiac events within 2 years.
+
+**Geographic priority:** Pulaski, Jefferson, and Craighead counties have the highest risk concentration. Start there.`,
+    sources: [
+      { label: "Optum Internal: Q1 2025 Intervention Planning", url: "#optum-internal" },
+    ],
+  },
+  cost: {
+    role: "assistant",
+    content: `**Top cost drivers across the 500-member cohort:**
+
+- **Inpatient admissions** - Single largest category. S3 (Heart Failure) and S4 (ESRD) account for 65% of all inpatient spend.
+- **ESRD management** - S4 members average $90K+/yr. 80% ESRD prevalence in this segment.
+- **ER-as-primary-care** - S5 (Rural SDOH) members average 3.2 ER visits/yr with zero PCP visits. Each avoidable ER visit costs ~$2,500.
+- **Pharmacy costs** - S2 (Metabolic) has elevated rx_cost_risk (15-35) from uncoordinated diabetes + hypertension medications.
+
+**Total population PMPY:** $51,135. Top 15% of members drive 60%+ of total spend.`,
+    sources: [
+      { label: "Optum Internal: Cost Architecture Analysis, 2024", url: "#optum-internal" },
+      { label: "USRDS Annual Data Report: ESRD Cost Trends", url: "https://usrds-adr.niddk.nih.gov" },
     ],
   },
 }
@@ -582,6 +684,7 @@ export function getSuggestedQueries(page: number): string[] {
   if (page === 0) return [...HOME_QUERIES]
   if (page === 1) return [...PAGE1_QUERIES]
   if (page === 2) return [...PAGE2_QUERIES]
+  if (page === 3) return [...PAGE3_QUERIES]
   return [...HOME_QUERIES]
 }
 
@@ -593,8 +696,13 @@ export function matchQuery(
 
   // Page 0: Home
   if (page === 0) {
-    if (lower.includes("value connect") || lower.includes("overview") || lower.includes("explore") || lower.includes("what"))
-      return HOME_RESPONSES.overview
+    if (lower.includes("roi") || lower.includes("intervention") || lower.includes("highest"))
+      return HOME_RESPONSES.roi
+    if (lower.includes("focus") || lower.includes("prioriti") || lower.includes("quarter") || lower.includes("resource"))
+      return HOME_RESPONSES.focus
+    if (lower.includes("cost") || lower.includes("driver") || lower.includes("spend") || lower.includes("expensive"))
+      return HOME_RESPONSES.cost
+    return HOME_RESPONSES.focus
   }
 
   // Page 1: Population Overview
@@ -605,6 +713,17 @@ export function matchQuery(
       return PAGE1_RESPONSES.esrd
     if (lower.includes("sdoh") || lower.includes("social determinant") || lower.includes("determinants"))
       return PAGE1_RESPONSES.sdoh
+  }
+
+  // Page 3: Intervention Planner
+  if (page === 3) {
+    if (lower.includes("highest roi") || lower.includes("best roi") || lower.includes("which segment"))
+      return PAGE3_RESPONSES.highest_roi
+    if (lower.includes("sensitive") || lower.includes("sensitivity") || lower.includes("population reach"))
+      return PAGE3_RESPONSES.sensitivity
+    if (lower.includes("total") || lower.includes("projected") || lower.includes("portfolio") || lower.includes("all segment"))
+      return PAGE3_RESPONSES.total_savings
+    return PAGE3_RESPONSES.highest_roi
   }
 
   // Page 2: Segmentation Analysis (merged)

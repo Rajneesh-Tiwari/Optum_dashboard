@@ -1,12 +1,17 @@
+import { useState } from "react"
+import { getSuggestedQueries } from "../../data/chatResponses"
+import { HWHIIcon } from "../HWHIIcon"
+
 interface LandingPageProps {
   onNavigate: (page: number) => void
+  onChatSubmit?: (query: string) => void
 }
 
 const CARDS = [
   {
     page: 1,
-    title: "Population Analysis",
-    desc: "Explore the full Arkansas member cohort with interactive health metrics, cost insights, and county-level geographic views.",
+    title: "Risk Intelligence",
+    desc: "Explore member demographics, cost drivers, and county-level risk patterns to identify where to focus resources.",
     icon: (
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -18,8 +23,8 @@ const CARDS = [
   },
   {
     page: 2,
-    title: "Segmentation Analysis",
-    desc: "Discover AI-identified member segments with risk profiles, intervention opportunities, and deep-dives for each group.",
+    title: "Segment Studio",
+    desc: "Review AI-identified member segments to compare risk profiles and prioritize intervention strategies.",
     icon: (
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10" />
@@ -29,13 +34,26 @@ const CARDS = [
       </svg>
     ),
   },
+  {
+    page: 3,
+    title: "Intervention Planner",
+    desc: "Model intervention scenarios, adjust parameters with interactive sliders, and project ROI by segment.",
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="4" y="2" width="16" height="20" rx="2" />
+        <path d="M8 6h8M8 10h8M8 14h4" />
+        <circle cx="16" cy="18" r="2" />
+        <path d="M14 18h-6" />
+      </svg>
+    ),
+  },
 ]
 
 const QUICK_ACCESS = [
   {
     page: 1,
     label: "Population Flow",
-    desc: "Age, insurance, risk and cost pathways",
+    desc: "Trace member pathways from demographics to cost",
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
@@ -56,7 +74,7 @@ const QUICK_ACCESS = [
   {
     page: 2,
     label: "Segment Deep Dive",
-    desc: "Explore 6 member archetypes",
+    desc: "Compare 6 member archetypes",
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10" />
@@ -68,7 +86,7 @@ const QUICK_ACCESS = [
   {
     page: 2,
     label: "Risk Pathways",
-    desc: "Risk factors to cost impact",
+    desc: "Conditions to cost impact",
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M18 20V10M12 20V4M6 20v-6" />
@@ -77,42 +95,96 @@ const QUICK_ACCESS = [
   },
 ]
 
-export function LandingPage({ onNavigate }: LandingPageProps) {
+export function LandingPage({ onNavigate, onChatSubmit }: LandingPageProps) {
+  const [chatInput, setChatInput] = useState("")
+  const suggestedQueries = getSuggestedQueries(0)
+
+  const handleChatSubmit = (query: string) => {
+    if (!query.trim()) return
+    setChatInput("")
+    onChatSubmit?.(query)
+  }
+
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="max-w-3xl mx-auto px-4 py-12">
       {/* Hero section */}
-      <div className="text-center mb-12">
+      <div className="text-center mb-10">
         <div className="flex items-center justify-center gap-3 mb-5">
-          <svg width="48" height="48" viewBox="0 0 32 32">
-            <circle cx="16" cy="16" r="14" fill="#FF612B" />
-            <circle cx="16" cy="16" r="6" fill="white" opacity="0.9" />
-            <circle cx="16" cy="16" r="2.5" fill="#FF612B" />
-          </svg>
+          <HWHIIcon size={48} />
         </div>
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">
-          <span className="text-optum">Optum</span> Value Connect
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          Know your Population. Move the needle.
         </h1>
-        <p className="text-lg text-gray-500 max-w-lg mx-auto">
-          AI Powered Public Health Intervention Planning
+        <p className="text-base text-gray-400 max-w-md mx-auto">
+          Heartland Whole Health - Cardiometabolic Intelligence
         </p>
       </div>
 
+      {/* Prominent Chat Box */}
+      <div className="mb-14">
+        <div className="glass-card p-1 relative">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              handleChatSubmit(chatInput)
+            }}
+            className="flex items-center gap-2"
+          >
+            <div className="pl-4 text-gray-300">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+            </div>
+            <input
+              type="text"
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              placeholder="Which segments need intervention this quarter?"
+              className="flex-1 bg-transparent px-3 py-4 text-base text-gray-900 placeholder-gray-400 focus:outline-none"
+            />
+            <button
+              type="submit"
+              disabled={!chatInput.trim()}
+              className="mr-2 w-10 h-10 rounded-xl text-white flex items-center justify-center hover:shadow-lg hover:scale-105 disabled:opacity-30 disabled:hover:scale-100 disabled:hover:shadow-none cursor-pointer transition-all shrink-0"
+              style={{ background: 'linear-gradient(135deg, #799842, #5F7A33)' }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
+              </svg>
+            </button>
+          </form>
+        </div>
+
+        {/* Suggested query chips */}
+        <div className="flex flex-wrap gap-2 mt-4 justify-center">
+          {suggestedQueries.map((q, i) => (
+            <button
+              key={i}
+              onClick={() => handleChatSubmit(q)}
+              className="text-xs bg-white border border-gray-200 rounded-full px-4 py-2 text-gray-500 hover:border-gray-300 hover:text-gray-700 hover:bg-gray-50 transition-all cursor-pointer"
+            >
+              {q}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Main navigation cards */}
-      <div className="grid grid-cols-2 gap-5 mb-8">
+      <div className="grid grid-cols-3 gap-5 mb-10">
         {CARDS.map((card) => (
           <button
             key={card.page}
             onClick={() => onNavigate(card.page)}
-            className="glass-card p-6 text-left transition-all cursor-pointer group hover:shadow-[0_0_24px_rgba(96,165,250,0.3)]"
-            style={{ border: '2px solid rgba(96, 165, 250, 0.45)', boxShadow: '0 0 12px rgba(96, 165, 250, 0.12)' }}
+            className="glass-card p-6 text-left transition-all cursor-pointer group hover:shadow-md"
           >
-            <div className="w-12 h-12 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-400 mb-4 group-hover:bg-optum/5 group-hover:border-optum/15 group-hover:text-optum transition-colors">
+            <div className="w-12 h-12 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-400 mb-4 group-hover:text-primary group-hover:bg-primary-light group-hover:border-primary/15 transition-colors">
               {card.icon}
             </div>
             <h3 className="text-base font-semibold text-gray-900 mb-1.5">{card.title}</h3>
             <p className="text-sm text-gray-500 leading-relaxed">{card.desc}</p>
-            <div className="mt-3 text-xs font-medium text-blue-500 group-hover:text-optum transition-colors flex items-center gap-1">
-              Explore
+            <div className="mt-3 text-xs font-medium text-gray-400 group-hover:text-primary transition-colors flex items-center gap-1">
+              Open
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M5 12h14M12 5l7 7-7 7" />
               </svg>
@@ -129,13 +201,13 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
             <button
               key={i}
               onClick={() => onNavigate(item.page)}
-              className="glass-card p-4 text-left cursor-pointer transition-all hover:border-blue-200 hover:shadow-sm group"
+              className="glass-card p-4 text-left cursor-pointer transition-all hover:shadow-sm group flex flex-col"
             >
-              <div className="w-8 h-8 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-400 mb-3 group-hover:text-blue-500 group-hover:bg-blue-50 group-hover:border-blue-100 transition-colors">
+              <div className="w-8 h-8 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-400 mb-3 group-hover:text-primary group-hover:bg-primary-light group-hover:border-primary/15 transition-colors shrink-0">
                 {item.icon}
               </div>
               <div className="text-sm font-medium text-gray-800 mb-0.5">{item.label}</div>
-              <div className="text-xs text-gray-400">{item.desc}</div>
+              <div className="text-xs text-gray-400 leading-relaxed">{item.desc}</div>
             </button>
           ))}
         </div>

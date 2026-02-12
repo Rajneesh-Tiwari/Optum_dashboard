@@ -134,7 +134,7 @@ export function FeatureDistribution({ feature, compact = false }: FeatureDistrib
       counts[key] = (counts[key] || 0) + 1
     })
     const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 10)
-    const pieColors = ["#60A5FA", "#34D399", "#A78BFA", "#F472B6", "#38BDF8", "#FBBF24", "#FF612B", "#EC4899", "#6366F1", "#14B8A6"]
+    const pieColors = ["#89BEC0", "#B0A5D4", "#E8BA98", "#8CB8D8", "#D8A8B8", "#A8C8A0", "#C4B08C", "#C09CC0", "#8CB8A8", "#D4B8A8"]
 
     return (
       <ReactECharts
@@ -208,7 +208,7 @@ export function FeatureDistribution({ feature, compact = false }: FeatureDistrib
               data: [flagged],
               barWidth: compact ? 28 : 36,
               itemStyle: {
-                color: "#60A5FA",
+                color: "#799842",
                 borderRadius: [6, 0, 0, 6],
               },
               label: {
@@ -289,15 +289,15 @@ export function FeatureDistribution({ feature, compact = false }: FeatureDistrib
               symbol: "circle",
               symbolSize: compact ? 5 : 8,
               data: bucketCounts,
-              itemStyle: { color: "#60A5FA" },
-              lineStyle: { color: "#60A5FA", width: 2 },
+              itemStyle: { color: "#799842" },
+              lineStyle: { color: "#799842", width: 2 },
               areaStyle: {
                 color: {
                   type: "linear",
                   x: 0, y: 0, x2: 0, y2: 1,
                   colorStops: [
-                    { offset: 0, color: "rgba(96, 165, 250, 0.3)" },
-                    { offset: 1, color: "rgba(96, 165, 250, 0.02)" },
+                    { offset: 0, color: "rgba(121, 152, 66, 0.25)" },
+                    { offset: 1, color: "rgba(121, 152, 66, 0.02)" },
                   ],
                 },
               },
@@ -361,15 +361,15 @@ export function FeatureDistribution({ feature, compact = false }: FeatureDistrib
             symbol: "circle",
             symbolSize: compact ? 4 : 6,
             data: buckets,
-            itemStyle: { color: "#34D399" },
-            lineStyle: { color: "#34D399", width: 2 },
+            itemStyle: { color: "#B0A5D4" },
+            lineStyle: { color: "#B0A5D4", width: 2 },
             areaStyle: {
               color: {
                 type: "linear",
                 x: 0, y: 0, x2: 0, y2: 1,
                 colorStops: [
-                  { offset: 0, color: "rgba(52, 211, 153, 0.3)" },
-                  { offset: 1, color: "rgba(52, 211, 153, 0.02)" },
+                  { offset: 0, color: "rgba(176, 165, 212, 0.25)" },
+                  { offset: 1, color: "rgba(176, 165, 212, 0.02)" },
                 ],
               },
             },

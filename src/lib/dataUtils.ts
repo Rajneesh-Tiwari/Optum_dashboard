@@ -9,12 +9,12 @@ export const metadata = featureMetadata as Record<
 >
 
 export const CLUSTER_COLORS: Record<number, string> = {
-  1: "#60A5FA",
-  2: "#34D399",
-  3: "#A78BFA",
-  4: "#F472B6",
-  5: "#38BDF8",
-  6: "#FBBF24",
+  1: "#89BEC0",
+  2: "#B0A5D4",
+  3: "#E8BA98",
+  4: "#8CB8D8",
+  5: "#D8A8B8",
+  6: "#A8C8A0",
 }
 
 export const CLUSTER_NAMES: Record<number, string> = {
@@ -181,10 +181,10 @@ export function getRiskFactorFlowSankey(clusterId?: number) {
   ]
 
   const costCategories = [
-    { label: "Inpatient", key: "ip_allowed_amt" as keyof Member, color: "#EF4444" },
-    { label: "Outpatient", key: "op_allowed_amt" as keyof Member, color: "#F97316" },
-    { label: "Physician", key: "phys_allowed_amt" as keyof Member, color: "#3B82F6" },
-    { label: "Pharmacy", key: "rx_allowed_amt" as keyof Member, color: "#8B5CF6" },
+    { label: "Inpatient", key: "ip_allowed_amt" as keyof Member, color: "#D8A8B8" },
+    { label: "Outpatient", key: "op_allowed_amt" as keyof Member, color: "#E8BA98" },
+    { label: "Physician", key: "phys_allowed_amt" as keyof Member, color: "#8CB8D8" },
+    { label: "Pharmacy", key: "rx_allowed_amt" as keyof Member, color: "#B0A5D4" },
   ]
 
   const allNodes = [
@@ -274,12 +274,12 @@ export function getPopulationFlowSankey() {
     { label: "$100K+", min: 100000, max: 10000000 },
   ]
 
-  const ageColors = ["#60A5FA", "#38BDF8", "#34D399", "#A78BFA", "#F472B6"]
+  const ageColors = ["#89BEC0", "#8CB8D8", "#A8C8A0", "#B0A5D4", "#D8A8B8"]
   const lobColors: Record<string, string> = {
-    Medicare: "#6366F1", Medicaid: "#14B8A6", DSNP: "#F59E0B", Commercial: "#EC4899",
+    Medicare: "#B0A5D4", Medicaid: "#89BEC0", DSNP: "#E8BA98", Commercial: "#D8A8B8",
   }
-  const riskColors = ["#34D399", "#FBBF24", "#F97316", "#EF4444"]
-  const costColors = ["#34D399", "#60A5FA", "#A78BFA", "#F472B6"]
+  const riskColors = ["#A8C8A0", "#E8BA98", "#D8A8B8", "#B0A5D4"]
+  const costColors = ["#A8C8A0", "#89BEC0", "#8CB8D8", "#D8A8B8"]
 
   const nodes = [
     ...ageGroups.map((a, i) => ({ name: a.label, itemStyle: { color: ageColors[i] } })),
@@ -328,6 +328,190 @@ export function getPopulationFlowSankey() {
   }
 
   return { nodes, links }
+}
+
+// ── Sankey node member stats (for detail panes) ─────────────────
+
+export interface NodeStats {
+  nodeName: string
+  nodeCategory: string
+  count: number
+  avgAge: number
+  avgCost: number
+  avgRiskScore: number
+  avgSeverity: number
+  avgER: number
+  pctDiabetes: number
+  pctHypertension: number
+  pctHeartDisease: number
+  pctESRD: number
+  topCluster: { name: string; count: number; color: string }
+  avgFrailty: number
+}
+
+function computeNodeStats(pool: Member[], nodeName: string, nodeCategory: string): NodeStats {
+  const n = pool.length
+  if (n === 0) {
+    return {
+      nodeName, nodeCategory, count: 0, avgAge: 0, avgCost: 0, avgRiskScore: 0,
+      avgSeverity: 0, avgER: 0, pctDiabetes: 0, pctHypertension: 0,
+      pctHeartDisease: 0, pctESRD: 0, topCluster: { name: "-", count: 0, color: "#999" },
+      avgFrailty: 0,
+    }
+  }
+  const clusterCounts: Record<number, number> = {}
+  pool.forEach((m) => {
+    clusterCounts[m.cluster_label] = (clusterCounts[m.cluster_label] || 0) + 1
+  })
+  const topC = Object.entries(clusterCounts).sort((a, b) => Number(b[1]) - Number(a[1]))[0]
+  const topClusterId = Number(topC[0])
+
+  return {
+    nodeName,
+    nodeCategory,
+    count: n,
+    avgAge: avg(pool.map((m) => m.age_at_pred)),
+    avgCost: avg(pool.map((m) => m.pmpy)),
+    avgRiskScore: avg(pool.map((m) => m.cardio_metabolic_risk_score)),
+    avgSeverity: avg(pool.map((m) => m.avg_severity_level)),
+    avgER: avg(pool.map((m) => m.cnt_er_visits)),
+    pctDiabetes: (countWhere(pool, "DIABETES_FLAG", 1) / n) * 100,
+    pctHypertension: (countWhere(pool, "HYPER_FLAG", 1) / n) * 100,
+    pctHeartDisease: (countWhere(pool, "HEART_FLAG", 1) / n) * 100,
+    pctESRD: (countWhere(pool, "esrd_flag", 1) / n) * 100,
+    topCluster: {
+      name: CLUSTER_NAMES[topClusterId] || `Cluster ${topClusterId}`,
+      count: Number(topC[1]),
+      color: CLUSTER_COLORS[topClusterId] || "#999",
+    },
+    avgFrailty: avg(pool.map((m) => m.frailty_index)),
+  }
+}
+
+const NODE_FILTERS: Record<string, { category: string; filter: (m: Member) => boolean }> = {
+  // Age groups (population flow)
+  "18-34": { category: "Age Group", filter: (m) => m.age_at_pred >= 18 && m.age_at_pred < 35 },
+  "35-49": { category: "Age Group", filter: (m) => m.age_at_pred >= 35 && m.age_at_pred < 50 },
+  "50-64": { category: "Age Group", filter: (m) => m.age_at_pred >= 50 && m.age_at_pred < 65 },
+  "65-79": { category: "Age Group", filter: (m) => m.age_at_pred >= 65 && m.age_at_pred < 80 },
+  "80+": { category: "Age Group", filter: (m) => m.age_at_pred >= 80 },
+  // Age groups (composition sankey)
+  "18-44": { category: "Age Group", filter: (m) => m.age_at_pred >= 18 && m.age_at_pred < 45 },
+  "45-64": { category: "Age Group", filter: (m) => m.age_at_pred >= 45 && m.age_at_pred < 65 },
+  // LOB
+  Medicare: { category: "Line of Business", filter: (m) => m.lob === "Medicare" },
+  Medicaid: { category: "Line of Business", filter: (m) => m.lob === "Medicaid" },
+  DSNP: { category: "Line of Business", filter: (m) => m.lob === "DSNP" },
+  Commercial: { category: "Line of Business", filter: (m) => m.lob === "Commercial" },
+  // Risk tiers
+  "Low Risk": { category: "Risk Tier", filter: (m) => m.cardio_metabolic_risk_score < 0.25 },
+  "Moderate Risk": { category: "Risk Tier", filter: (m) => m.cardio_metabolic_risk_score >= 0.25 && m.cardio_metabolic_risk_score < 0.45 },
+  "High Risk": { category: "Risk Tier", filter: (m) => m.cardio_metabolic_risk_score >= 0.45 && m.cardio_metabolic_risk_score < 0.65 },
+  "Critical Risk": { category: "Risk Tier", filter: (m) => m.cardio_metabolic_risk_score >= 0.65 },
+  // Cost tiers
+  "Under $25K": { category: "Cost Tier", filter: (m) => m.pmpy < 25000 },
+  "$25-50K": { category: "Cost Tier", filter: (m) => m.pmpy >= 25000 && m.pmpy < 50000 },
+  "$50-100K": { category: "Cost Tier", filter: (m) => m.pmpy >= 50000 && m.pmpy < 100000 },
+  "$100K+": { category: "Cost Tier", filter: (m) => m.pmpy >= 100000 },
+  // Conditions
+  Diabetes: { category: "Condition", filter: (m) => (m as Record<string, unknown>).DIABETES_FLAG === 1 },
+  Hypertension: { category: "Condition", filter: (m) => (m as Record<string, unknown>).HYPER_FLAG === 1 },
+  "Heart Disease": { category: "Condition", filter: (m) => (m as Record<string, unknown>).HEART_FLAG === 1 },
+  "Kidney Disease": { category: "Condition", filter: (m) => (m as Record<string, unknown>).KIDNEY_FLAG === 1 },
+  ESRD: { category: "Condition", filter: (m) => (m as Record<string, unknown>).esrd_flag === 1 },
+  // Severity tiers
+  "Low Severity": { category: "Severity", filter: (m) => m.avg_severity_level < 2 },
+  "Mod Severity": { category: "Severity", filter: (m) => m.avg_severity_level >= 2 && m.avg_severity_level < 3.5 },
+  "High Severity": { category: "Severity", filter: (m) => m.avg_severity_level >= 3.5 },
+  // Cost categories
+  "Low Cost (<$20K)": { category: "Cost Tier", filter: (m) => m.pmpy < 20000 },
+  "Med Cost ($20-60K)": { category: "Cost Tier", filter: (m) => m.pmpy >= 20000 && m.pmpy < 60000 },
+  "High Cost ($60K+)": { category: "Cost Tier", filter: (m) => m.pmpy >= 60000 },
+  // Cost type (approximate: members where that category is dominant)
+  Inpatient: { category: "Cost Category", filter: (m) => m.ip_allowed_amt > m.op_allowed_amt && m.ip_allowed_amt > m.rx_allowed_amt },
+  Outpatient: { category: "Cost Category", filter: (m) => m.op_allowed_amt > m.ip_allowed_amt && m.op_allowed_amt > m.rx_allowed_amt },
+  Physician: { category: "Cost Category", filter: (m) => m.phys_allowed_amt > m.ip_allowed_amt && m.phys_allowed_amt > m.op_allowed_amt },
+  Pharmacy: { category: "Cost Category", filter: (m) => m.rx_allowed_amt > m.ip_allowed_amt && m.rx_allowed_amt > m.op_allowed_amt },
+  // Clusters
+  "C1: At-Risk": { category: "Segment", filter: (m) => m.cluster_label === 1 },
+  "C2: Metabolic": { category: "Segment", filter: (m) => m.cluster_label === 2 },
+  "C3: Heart Fail.": { category: "Segment", filter: (m) => m.cluster_label === 3 },
+  "C4: ESRD": { category: "Segment", filter: (m) => m.cluster_label === 4 },
+  "C5: Rural SDOH": { category: "Segment", filter: (m) => m.cluster_label === 5 },
+  "C6: Frail Elderly": { category: "Segment", filter: (m) => m.cluster_label === 6 },
+}
+
+export function getNodeMemberStats(nodeName: string, clusterScope?: number): NodeStats | null {
+  const entry = NODE_FILTERS[nodeName]
+  if (!entry) return null
+  const pool = clusterScope ? membersInCluster(clusterScope) : members
+  const filtered = pool.filter(entry.filter)
+  return computeNodeStats(filtered, nodeName, entry.category)
+}
+
+// ── Intervention planner cost breakdowns ─────────────────────────
+
+export interface CostBreakdown {
+  ip: number
+  op: number
+  phys: number
+  rx: number
+  total: number
+  count: number
+  totalIP: number
+  totalOP: number
+  totalPhys: number
+  totalRx: number
+  totalCost: number
+}
+
+export function clusterCostBreakdown(clusterId: number): CostBreakdown {
+  const m = membersInCluster(clusterId)
+  const count = m.length
+  const ip = avg(m.map((x) => x.ip_allowed_amt))
+  const op = avg(m.map((x) => x.op_allowed_amt))
+  const phys = avg(m.map((x) => x.phys_allowed_amt))
+  const rx = avg(m.map((x) => x.rx_allowed_amt))
+  return {
+    ip,
+    op,
+    phys,
+    rx,
+    total: ip + op + phys + rx,
+    count,
+    totalIP: sum(m.map((x) => x.ip_allowed_amt)),
+    totalOP: sum(m.map((x) => x.op_allowed_amt)),
+    totalPhys: sum(m.map((x) => x.phys_allowed_amt)),
+    totalRx: sum(m.map((x) => x.rx_allowed_amt)),
+    totalCost: sum(m.map((x) => x.pmpy)),
+  }
+}
+
+export interface PercentileCost {
+  percentile: number
+  avgCost: number
+  avgRisk: number
+  count: number
+}
+
+export function clusterRiskPercentileCostMap(clusterId: number): PercentileCost[] {
+  const m = membersInCluster(clusterId)
+  const sorted = [...m].sort((a, b) => a.cardio_metabolic_risk_score - b.cardio_metabolic_risk_score)
+  const deciles: PercentileCost[] = []
+  for (let p = 10; p <= 100; p += 10) {
+    const start = Math.floor(((p - 10) / 100) * sorted.length)
+    const end = Math.floor((p / 100) * sorted.length)
+    const bucket = sorted.slice(start, end)
+    if (bucket.length > 0) {
+      deciles.push({
+        percentile: p,
+        avgCost: avg(bucket.map((x) => x.pmpy)),
+        avgRisk: avg(bucket.map((x) => x.cardio_metabolic_risk_score)),
+        count: bucket.length,
+      })
+    }
+  }
+  return deciles
 }
 
 // ── County aggregation for heatmap ───────────────────────────────

@@ -27,7 +27,7 @@ export function PersonaCard({ persona, animate = true }: PersonaCardProps) {
       <div className="space-y-1">
         {persona.keyFeatures.map((f, i) => (
           <div key={i} className="flex items-start gap-2 text-xs text-gray-500">
-            <span className="text-optum mt-0.5">-</span>
+            <span className="text-primary mt-0.5">-</span>
             <span>{f}</span>
           </div>
         ))}
